@@ -1,0 +1,19 @@
+# 忽略虚拟环境
+venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# 忽略训练产生的大文件
+runs/
+*.pt
+*.jpg
+*.mp4
+
+# 忽略数据集（太大了，传不上去的）
+Sago_Final_Dataset*/
+dataset/
+raw_data/
+
+# 忽略 IDE 设置
+.vscode/
+.idea/
