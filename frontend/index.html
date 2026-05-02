@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -291,4 +292,146 @@
 
     <script src="script.js"></script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SagoCraft AI | Melanau Heritage</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+        <div class="nav-logo">SAGOCRAFT <span>AI</span></div>
+        <div class="nav-links">
+            <a href="#" class="nav-btn active" onclick="showPage('history')" data-i18n="nav_history">历史与文化</a>
+            <a href="#" class="nav-btn" onclick="showPage('process')" data-i18n="nav_process">制作工序</a>
+            <a href="#" class="nav-btn" onclick="showPage('ai')" data-i18n="nav_ai">智能探测</a>
+            <a href="#" class="nav-btn" onclick="showPage('map')" data-i18n="nav_map">地理位置</a>
+            
+            <!-- 语言切换器 -->
+            <select id="lang-switch" onchange="changeLanguage(this.value)">
+                <option value="zh">华文 (ZH)</option>
+                <option value="en">English (EN)</option>
+                <option value="ms">Bahasa Melayu (MS)</option>
+            </select>
+        </div>
+    </nav>
+
+    <div id="main-container">
+        
+        <!-- ================= PAGE 1: 历史 ================= -->
+        <section id="history" class="content-section active">
+            <!-- 带有历史感的黑色调背景图 -->
+            <div class="hero-bg" style="background-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2000');"></div>
+            <div class="overlay"></div>
+            
+            <div class="text-content">
+                <h2 class="year">SINCE ANCIENT TIMES</h2>
+                <h1 class="main-title" data-i18n="hist_title">马兰诺族与硕莪：<br>生命之源</h1>
+                <div class="text-box">
+                    <p data-i18n="hist_p1">在马来西亚砂拉越中部的沿海沼泽地带（如 Mukah 与 Dalat），硕莪（Sago / Rumbia）不仅仅是一种植物，它是马兰诺（Melanau）族人数百年来的生命血脉。</p>
+                    <p data-i18n="hist_p2">在稻米普及之前，硕莪淀粉是马兰诺人的绝对主食。从剥削树皮到提取淀粉，这种古老的手工技艺代代相传，塑造了他们独特的饮食文化（如 Linut 和 Sagu 颗粒）。</p>
+                    <p data-i18n="hist_p3">本网站旨在通过最新的计算机视觉（AI YOLOv8）技术，记录并致敬这一珍贵的非物质文化遗产，让传统工艺在数字时代焕发新生。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 2: 工序 ================= -->
+        <section id="process" class="content-section">
+            <div class="hero-bg" style="background-image: url('https://images.unsplash.com/photo-1506526607062-841f4864f1e9?q=80&w=2000');"></div>
+            <div class="overlay darker"></div>
+            
+            <div class="process-wrapper">
+                <h1 class="section-title" style="text-align:center; margin-bottom: 50px;" data-i18n="proc_title">传统工艺流程</h1>
+                <div class="process-flex">
+                    <div class="step-card">
+                        <img src="https://images.unsplash.com/photo-1615822363065-27a3c79da525?q=80&w=800" alt="Sifting">
+                        <h3 data-i18n="proc_step1">01. 摇筛 (MENGAYAK)</h3>
+                        <p data-i18n="proc_desc1">将粗糙的湿硕莪粉放入传统的藤编竹筛 (Nyiru) 中，凭借工人的经验与手感反复摇晃，过滤出最细腻、大小均匀的粉末颗粒。</p>
+                    </div>
+                    <div class="step-card">
+                        <img src="https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=800" alt="Roasting">
+                        <h3 data-i18n="proc_step2">02. 烘烤 (MEMBAKAR)</h3>
+                        <p data-i18n="proc_desc2">在巨大的传统泥炉 (Belanga) 上，精确控制柴火的温度。工人必须不断翻炒，将水分布局烘干，使其成为散发焦香的干粒。</p>
+                    </div>
+                    <div class="step-card">
+                        <img src="https://images.unsplash.com/photo-1606149059549-6042addddc5e?q=80&w=800" alt="Product">
+                        <h3 data-i18n="proc_step3">03. 成品 (SAGU KOMBO)</h3>
+                        <p data-i18n="proc_desc3">经过炉火洗礼的 Sagu 颗粒金黄酥脆。它们被精心包装，成为了跨越时间、传递马兰诺乡愁的古老馈赠。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: AI 探测 (升级版) -->
+         <section id="ai" class="content-section">
+            <div class="ai-container">
+                <div class="ai-header">
+                    <h2>SAGO <span>TRACKER</span></h2>
+                    <div class="mode-toggle">
+                        <button id="btn-upload-mode" class="mode-btn active">文件上传模式</button>
+                        <button id="btn-live-mode" class="mode-btn">实时追踪模式</button>
+                    </div>
+                </div>
+                
+                <!-- 模式 A: 文件上传 (你原本的功能) -->
+                 <div id="upload-ui" class="ai-content">
+                    <div class="ai-upload-grid">
+                        <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-upload').click()">
+                            <input type="file" id="file-upload" accept="image/*,video/*" hidden>
+                            <div id="preview-container" style="position: relative; display: inline-block;">
+                                <!-- 这里的图片或视频会由 JS 动态生成 -->
+                                 <canvas id="result-canvas" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
+                                </div>
+                        </div>
+                        <div class="action-panel">
+                            <button id="analyze-btn">开始单次分析</button>
+                            <div id="upload-results"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 模式 B: 实时追踪模式 -->
+                 <div id="live-ui" class="ai-content" style="display:none;">
+                    <div class="live-grid">
+                        <!-- 关键：给这个 wrapper 加上相对定位 -->
+                         <div class="video-wrapper" style="position: relative; display: inline-block; line-height: 0;">
+                            <video id="webcam" autoplay playsinline style="width: 100%; max-width: 800px; border-radius: 8px;"></video>
+                            <!-- 关键：给 canvas 加上绝对定位，覆盖在视频上 -->
+                             <canvas id="canvas-overlay" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
+                            </div>
+                            <div class="live-status-panel">
+                                <h3 style="color: var(--accent);">LIVE FEED DATA</h3>
+                                <div id="live-results" class="result-box">等待检测结果...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <!-- ================= PAGE 4: 地图 (升级为精准标注) ================= -->
+        <section id="map" class="content-section">
+            <div class="map-wrapper">
+                <!-- 全新的谷歌地图嵌入代码，直接标注了 Sago Factory -->
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.051944733075!2d111.93320267584611!3d2.84888899708977!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3371f64380f305c9%3A0x676b77132145e3c!2sSago%20Factory%20in%20Kampung%20Medong%2C%20Dalat%2C%20Mukah!5e0!3m2!1sen!2smy!4v1777621532115!5m2!1sen!2smy" width="100%" height="100%" style="border:0; filter: grayscale(1) invert(0.9);" allowfullscreen="" loading="lazy"></iframe>
+                
+                <div class="map-info">
+                    <h3 data-i18n="map_title">SAGO FACTORY, KAMPUNG MEDONG</h3>
+                    <p data-i18n="map_desc">Dalat, Mukah, Sarawak</p>
+                    <hr style="border-color: #c4a47c; margin: 15px 0;">
+                    <p style="font-size: 14px;" data-i18n="map_text">这里是硕莪文化保存最完好的地区，也是我们 AI 数据集采集的核心地带。</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+>>>>>>> cd277805172e566b9fbfd2bef59377ac10a4f1e5
 </html>
