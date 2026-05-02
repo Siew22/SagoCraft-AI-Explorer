@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
     <nav class="navbar">
         <div class="nav-logo">SAGOCRAFT <span>AI</span></div>
         <div class="nav-links">
-            <a href="#" class="nav-btn active" onclick="showPage('history')" data-i18n="nav_history">历史与文化</a>
+            <a href="#" class="nav-btn active" onclick="showPage('history')" data-i18n="nav_history">主页</a>
             <a href="#" class="nav-btn" onclick="showPage('process')" data-i18n="nav_process">制作工序</a>
             <a href="#" class="nav-btn" onclick="showPage('ai')" data-i18n="nav_ai">智能探测</a>
             <a href="#" class="nav-btn" onclick="showPage('map')" data-i18n="nav_map">地理位置</a>
@@ -21,7 +21,7 @@
             <!-- 语言切换器 -->
             <select id="lang-switch" onchange="changeLanguage(this.value)">
                 <option value="zh">华文 (ZH)</option>
-                <option value="en">English (EN)</option>
+                <option value="en" selected>English (EN)</option>
                 <option value="ms">Bahasa Melayu (MS)</option>
             </select>
         </div>
@@ -36,12 +36,74 @@
             <div class="overlay"></div>
             
             <div class="text-content">
-                <h2 class="year">SINCE ANCIENT TIMES</h2>
-                <h1 class="main-title" data-i18n="hist_title">马兰诺族与硕莪：<br>生命之源</h1>
-                <div class="text-box">
-                    <p data-i18n="hist_p1">在马来西亚砂拉越中部的沿海沼泽地带（如 Mukah 与 Dalat），硕莪（Sago / Rumbia）不仅仅是一种植物，它是马兰诺（Melanau）族人数百年来的生命血脉。</p>
-                    <p data-i18n="hist_p2">在稻米普及之前，硕莪淀粉是马兰诺人的绝对主食。从剥削树皮到提取淀粉，这种古老的手工技艺代代相传，塑造了他们独特的饮食文化（如 Linut 和 Sagu 颗粒）。</p>
-                    <p data-i18n="hist_p3">本网站旨在通过最新的计算机视觉（AI YOLOv8）技术，记录并致敬这一珍贵的非物质文化遗产，让传统工艺在数字时代焕发新生。</p>
+                <h2 class="main-title" data-i18n="hist_intro_title">Introduction &amp; History</h2>
+                <div class="text-box intro-box">
+                    <p data-i18n="hist_intro_p1">The Melanau community in Sarawak is deeply connected to the sago palm (rumbia), being its primary cultivators and consumers. 
+                        During the 1940s Japanese occupation, sago became a crucial staple food. Today, Mukah is the largest sago cultivation area in Sarawak, alongside Matu Daro, Dalat, and Oya.</p>
+                    <div class="food-grid">
+                        <h3 data-i18n="hist_food_title">Traditional Sago Delicacies</h3>
+                        <ul class="food-list">
+                            <li class="food-item">
+                                <img src="media/bebola_sagu.jpg" alt="Bebola sagu">
+                                <p data-i18n="hist_food_item2">Sago Balls (Bulu): These traditional, peanut-sized sago beads are enjoyed as snacks, perfectly paired with umai or grilled fish. Although the traditional process is complex and time-consuming, the Melanau people proudly preserve this culinary heritage today.</p>
+                            </li>
+                            <li class="food-item">
+                                <img src="media/Lemantak%26Linut.jpg" alt="Lemantak and Linut">
+                                <p data-i18n="hist_food_item1">Lemantak &amp; Linut: Sago flour (lemantak) is used to make linut, a thick, glue-like staple dish eaten with sambal belacan and side dishes as a substitute for rice.</p>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mukah-section">
+                <div class="mukah-text">
+                    <h2 class="history-subtitle" data-i18n="mukah_title">Mukah</h2>
+                    <p data-i18n="mukah_p1">Located in the central region of Sarawak facing the South China Sea, Mukah is the 10th administrative division of the state. It covers 6,997.61 square kilometers with a population of 124,311 (2008), predominantly made up of the Melanau ethnic group.</p>
+                    <p data-i18n="mukah_p2">Mukah was officially elevated to a Division on March 1, 2002, with Mukah District as its administrative center. Currently, it consists of five districts—Mukah, Dalat, Matu, Daro, and Tanjung Manis—along with three sub-districts: Balingian, Oya, and Igan.</p>
+                    <p data-i18n="mukah_p3">All districts in Mukah are fully accessible by road. The town of Mukah can be reached by air via MasWings flights connecting to Kuching and Miri, each taking about an hour. By land, it is accessible from Sibu and Bintulu, with Bintulu being the closest city at just a two-hour drive via the coastal road. Alternatively, a two-hour speedboat ride is available from Sibu to Dalat town.</p>
+                </div>
+                <div class="mukah-media">
+                    <img src="media/mukah.png" alt="Mukah aerial view">
+                </div>
+            </div>
+
+            <div class="mukah-section melanau-section">
+                <div class="mukah-text">
+                    <h2 class="history-subtitle" data-i18n="melanau_title">Melanau</h2>
+                        <p data-i18n="melanau_p1">The Melanau are an Austronesian indigenous group and among the earliest inland settlers of Sarawak. According to Morris (1991), they share linguistic and social ties with the Kajang, Kayan, Kenyah, and Bidayuh tribes. Batang Mukah and Oya served as their ancient migration routes from the inland to the coast, where their settlements are now mostly built along rivers and shorelines.</p>
+                        <p data-i18n="melanau_p2">After migrating, they underwent two major identity shifts: adapting their culture to the coastal environment, and later, Islamization. Today, the majority of the Melanau are Muslims, with some practicing Christianity. However, a few still hold on to traditional beliefs in the sea spirit, known locally as "inah" or "ipok".</p>
+                        <p data-i18n="melanau_p3">In the past, the Melanau built unique three-story tall houses for defense against enemy attacks. Today, they have adapted to modern lifestyles by living in separate, individual houses. Their population is concentrated in coastal areas such as the northern Rajang river valley, Igan, Matu-Daro, Mukah, Oya, and Bintulu, as well as in major cities like Kuching, Sibu, and Miri.</p>
+                </div>
+                <div class="mukah-media">
+                    <img src="media/melanau1.jpg" alt="Melanau cultural performance">
+                </div>
+            </div>
+
+            <div class="mukah-section sago-section">
+                <div class="mukah-text">
+                    <h2 class="history-subtitle" data-i18n="sago_title">Sago</h2>
+                    <p data-i18n="sago_p1">In the past, sago was the primary staple food and the main substitute for rice among the Melanau community. There are several well-known local varieties, such as Sago Mukah, Sago Medong, and Sago tupek. This traditional delicacy is prepared using authentic ingredients including lemantak (sago flour), coconut milk, fine desiccated coconut, salt, and rice powder.</p>
+                </div>
+                <div class="mukah-media">
+                    <img src="media/sagu.jpg" alt="Sago pearls">
+                </div>
+            </div>
+
+            <div class="text-content additional-info">
+                <h2 class="history-subtitle" data-i18n="additional_info_title">Watch the Video</h2>
+                <div class="video-carousel">
+                    <h3 id="history-video-title" class="video-title">More info about Mukah</h3>
+                    <div class="video-frame">
+                        <button type="button" class="video-nav prev" id="history-video-prev" aria-label="Previous video">&#10094;</button>
+                        <video id="history-video-player" controls preload="metadata"></video>
+                        <button type="button" class="video-nav next" id="history-video-next" aria-label="Next video">&#10095;</button>
+                    </div>
+                    <div class="video-reference">
+                        <span id="history-video-ref-label">Reference:</span>
+                        <a id="history-video-ref" href="#" target="_blank" rel="noopener">https://www.youtube.com/</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -52,86 +114,177 @@
             <div class="overlay darker"></div>
             
             <div class="process-wrapper">
-                <h1 class="section-title" style="text-align:center; margin-bottom: 50px;" data-i18n="proc_title">传统工艺流程</h1>
-                <div class="process-flex">
-                    <div class="step-card">
-                        <img src="https://images.unsplash.com/photo-1615822363065-27a3c79da525?q=80&w=800" alt="Sifting">
-                        <h3 data-i18n="proc_step1">01. 摇筛 (MENGAYAK)</h3>
-                        <p data-i18n="proc_desc1">将粗糙的湿硕莪粉放入传统的藤编竹筛 (Nyiru) 中，凭借工人的经验与手感反复摇晃，过滤出最细腻、大小均匀的粉末颗粒。</p>
+                <h1 class="section-title" data-i18n="proc_title">传统工艺流程</h1>
+
+                <div class="process-step">
+                    <div class="process-media">
+                        <img src="media/Step1.jpg" alt="Tubeng Balau (Felling)">
                     </div>
-                    <div class="step-card">
-                        <img src="https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=800" alt="Roasting">
-                        <h3 data-i18n="proc_step2">02. 烘烤 (MEMBAKAR)</h3>
-                        <p data-i18n="proc_desc2">在巨大的传统泥炉 (Belanga) 上，精确控制柴火的温度。工人必须不断翻炒，将水分布局烘干，使其成为散发焦香的干粒。</p>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step1_title">1. Tubeng Balau (Felling)</h3>
+                        <p data-i18n="proc_step1_desc">The sago palm is felled just before flowering, when its stem is richest in starch. A single palm can yield between 150 to 300 kg of starch.</p>
                     </div>
-                    <div class="step-card">
-                        <img src="https://images.unsplash.com/photo-1606149059549-6042addddc5e?q=80&w=800" alt="Product">
-                        <h3 data-i18n="proc_step3">03. 成品 (SAGU KOMBO)</h3>
-                        <p data-i18n="proc_desc3">经过炉火洗礼的 Sagu 颗粒金黄酥脆。它们被精心包装，成为了跨越时间、传递马兰诺乡愁的古老馈赠。</p>
+                </div>
+
+                <div class="process-step process-step-reverse">
+                    <div class="process-media">
+                        <img src="media/Step2.jpg" alt="Marut (Shredding)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step2_title">2. Marut (Shredding)</h3>
+                        <p data-i18n="proc_step2_desc">After removing the bark (Ungun), the sago pith (Sei Balau) is placed on a Lagan (two tied logs with a small gap). A shredder (Parut) is then used to produce shredded pith called Pou.</p>
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="process-media">
+                        <img src="media/Step3.jpg" alt="Menyak (Extraction)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step3_title">3. Menyak (Extraction)</h3>
+                        <p data-i18n="proc_step3_desc">The Pou is brought to an extraction house (Nyanan or Jagen) and placed onto a nypa leaf mat (Idaih). It is mixed with river water drawn using a conical bucket (Terusueng) made of a sago frond (Ukap balau). The extraction is done by trampling and kneading the wet Pou barefoot to produce raw sago starch (Sei). This settles at the bottom of a container (Jalur), and the excess water is drained through a small hole (Serebut).</p>
+                    </div>
+                </div>
+
+                <div class="process-step process-step-reverse">
+                    <div class="process-media">
+                        <img src="media/Step4.jpg" alt="Mela'uek (Cleaning)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step4_title">4. Mela'uek (Cleaning)</h3>
+                        <p data-i18n="proc_step4_desc">The settled Sei is collected and placed on a cheesecloth (Tapih) inside a boat (Salui). It is washed and strained repeatedly to remove any impurities.</p>
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="process-media">
+                        <img src="media/Step5.jpg" alt="Mengulud (Kneading)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step5_title">5. Mengulud (Kneading)</h3>
+                        <p data-i18n="proc_step5_desc">The raw Sei is mixed with shredded coconut (Benyuh Parut), rice bran (Dabou Padai), and salt (Sia). The mixture is repeatedly rolled and kneaded on a special nypa mat known as Kejangan.</p>
+                    </div>
+                </div>
+
+                <div class="process-step process-step-reverse">
+                    <div class="process-media">
+                        <img src="media/Step6.jpg" alt="Mengugoh (Pearling)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step6_title">6. Mengugoh (Pearling)</h3>
+                        <p data-i18n="proc_step6_desc">Following the Mengulud process, the mixture is sifted using a rope-suspended colander (Takueang) to form small, round grains.</p>
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="process-media">
+                        <img src="media/Step7.jpg" alt="Mu'ui (Cooking)">
+                    </div>
+                    <div class="process-text">
+                        <h3 data-i18n="proc_step7_title">7. Mu'ui (Cooking)</h3>
+                        <p data-i18n="proc_step7_desc">These raw sago pearls are cooked on a clay oven (Belanga) and must be spread occasionally to cook evenly. Once cooled, the brownish end product, known as Sagok, is stored in tight containers and perfectly enjoyed with smoked fish (Jekan Ipuong), umai, or curry gravy (Keliseh).</p>
+                    </div>
+                </div>
+                
+                <div class="process-bottom-row">
+                    <div class="process-ready">
+                        <div class="process-text">
+                            <h2 class="history-subtitle" data-i18n="proc_final_title">Ready-to-Eat</h2>
+                        </div>
+                        <div class="process-media-img">
+                            <img src="media/final.jpg" alt="Ready-to-Eat">
+                        </div>
+                    </div>
+
+                    <div class="text-content process-video">
+                        <h2 class="history-subtitle" data-i18n="process_video_title">Process Video</h2>
+                        <div class="video-carousel process-video-carousel">
+                            <div class="video-frame">
+                                <video src="media/Penghasilan_Biji_Sagu.mp4" controls></video>
+                            </div>
+                            <div class="video-reference">
+                                <span id="process-video-ref-label">Reference:</span>
+                                <a id="process-video-ref" href="https://www.youtube.com/watch?v=P1OSFfNDTCI" target="_blank" rel="noopener">https://www.youtube.com/watch?v=P1OSFfNDTCI</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Section 3: AI 探测 (升级版) -->
-         <section id="ai" class="content-section">
+        <section id="ai" class="content-section">
             <div class="ai-container">
                 <div class="ai-header">
-                    <h2>SAGO <span>TRACKER</span></h2>
+                    <h2 data-i18n="ai_title">SAGO <span>TRACKER</span></h2>
+                    <p data-i18n="ai_subtitle" style="color: #ccc; margin-bottom: 20px;">请选择照片/影片上传，或开启实时追踪模式进行现场探测。</p>
+                    
                     <div class="mode-toggle">
-                        <button id="btn-upload-mode" class="mode-btn active">文件上传模式</button>
-                        <button id="btn-live-mode" class="mode-btn">实时追踪模式</button>
+                        <button id="btn-upload-mode" class="mode-btn active" data-i18n="ai_mode_upload">文件上传模式</button>
+                        <button id="btn-live-mode" class="mode-btn" data-i18n="ai_mode_live">实时追踪模式</button>
                     </div>
                 </div>
                 
-                <!-- 模式 A: 文件上传 (你原本的功能) -->
-                 <div id="upload-ui" class="ai-content">
+                <div id="upload-ui" class="ai-content">
                     <div class="ai-upload-grid">
                         <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-upload').click()">
                             <input type="file" id="file-upload" accept="image/*,video/*" hidden>
+                            
+                            <div id="upload-placeholder" style="padding: 40px 20px; text-align: center;">
+                                <p data-i18n="ai_drop" style="font-size: 1.2rem; color: var(--accent); margin: 0 0 10px 0;">点击或拖拽上传</p>
+                                <span data-i18n="ai_format" style="color: #888; font-size: 0.9rem;">支持 JPG, PNG, MP4 格式</span>
+                            </div>
+
                             <div id="preview-container" style="position: relative; display: inline-block;">
-                                <!-- 这里的图片或视频会由 JS 动态生成 -->
-                                 <canvas id="result-canvas" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
-                                </div>
+                                <canvas id="result-canvas" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
+                            </div>
                         </div>
+                        
                         <div class="action-panel">
-                            <button id="analyze-btn">开始单次分析</button>
+                            <div class="target-list" style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; border: 1px solid rgba(255,255,255,0.1);">
+                                <h4 data-i18n="ai_can_detect" style="color: var(--accent); margin-top: 0; margin-bottom: 10px;">🎯 可探测目标：</h4>
+                                <ul style="color: #ccc; padding-left: 20px; margin: 0; font-size: 0.95rem; line-height: 1.8;">
+                                    <li data-i18n="ai_target1">传统泥炉 (Belanga)</li>
+                                    <li data-i18n="ai_target2">摇筛工具 (Nyiru)</li>
+                                    <li data-i18n="ai_target3">操作工人 (Worker)</li>
+                                    <li data-i18n="ai_target4">包装成品 (Sago Pack)</li>
+                                </ul>
+                            </div>
+
+                            <button id="analyze-btn" data-i18n="ai_btn">开始分析</button>
                             <div id="upload-results"></div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 模式 B: 实时追踪模式 -->
-                 <div id="live-ui" class="ai-content" style="display:none;">
+                <div id="live-ui" class="ai-content" style="display:none;">
                     <div class="live-grid">
-                        <!-- 关键：给这个 wrapper 加上相对定位 -->
-                         <div class="video-wrapper" style="position: relative; display: inline-block; line-height: 0;">
+                        <div class="video-wrapper" style="position: relative; display: inline-block; line-height: 0;">
                             <video id="webcam" autoplay playsinline style="width: 100%; max-width: 800px; border-radius: 8px;"></video>
-                            <!-- 关键：给 canvas 加上绝对定位，覆盖在视频上 -->
-                             <canvas id="canvas-overlay" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
-                            </div>
-                            <div class="live-status-panel">
-                                <h3 style="color: var(--accent);">LIVE FEED DATA</h3>
-                                <div id="live-results" class="result-box">等待检测结果...</div>
-                            </div>
+                            <canvas id="canvas-overlay" style="position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none;"></canvas>
+                        </div>
+                        <div class="live-status-panel">
+                            <h3 style="color: var(--accent);" data-i18n="ai_live_title">LIVE FEED DATA</h3>
+                            <div id="live-results" class="result-box" data-i18n="ai_live_waiting">等待检测结果...</div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
         <!-- ================= PAGE 4: 地图 (升级为精准标注) ================= -->
         <section id="map" class="content-section">
             <div class="map-wrapper">
-                <!-- 全新的谷歌地图嵌入代码，直接标注了 Sago Factory -->
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.051944733075!2d111.93320267584611!3d2.84888899708977!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3371f64380f305c9%3A0x676b77132145e3c!2sSago%20Factory%20in%20Kampung%20Medong%2C%20Dalat%2C%20Mukah!5e0!3m2!1sen!2smy!4v1777621532115!5m2!1sen!2smy" width="100%" height="100%" style="border:0; filter: grayscale(1) invert(0.9);" allowfullscreen="" loading="lazy"></iframe>
-                
+                <iframe src="https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d1118.3075279791929!2d111.9362814!3d2.6874863!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMsKwNDEnMTUuNyJOIDExMcKwNTYnMDguNCJF!5e1!3m2!1sen!2smy!4v1777723430205!5m2!1sen!2smy" width="100%" height="100%" style="border:0" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
                 <div class="map-info">
-                    <h3 data-i18n="map_title">SAGO FACTORY, KAMPUNG MEDONG</h3>
-                    <p data-i18n="map_desc">Dalat, Mukah, Sarawak</p>
+                    <h3 data-i18n="map_title">SAGO FACTORY</h3>
+                    <p data-i18n="map_desc">Pekan Dalat, Dalat, Sarawak</p>
                     <hr style="border-color: #c4a47c; margin: 15px 0;">
                     <p style="font-size: 14px;" data-i18n="map_text">这里是硕莪文化保存最完好的地区，也是我们 AI 数据集采集的核心地带。</p>
                 </div>
             </div>
+
         </section>
 
     </div>

@@ -49,8 +49,20 @@ body, html {
     position: absolute; top: 80px; left: 0;
     width: 100%; height: calc(100vh - 80px);
     display: none; /* 默认隐藏所有页面 */
-    align-items: center; justify-content: center;
+    align-items: flex-start; justify-content: center;
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* 让手机端滚动更丝滑 */
+    padding: 40px 0 80px 0; /* 上方加间距，底部多留白防挡住 */
+    box-sizing: border-box;
+}
+#history.content-section, 
+#process.content-section, 
+#ai.content-section, 
+#map.content-section {
+    flex-direction: column;
+    align-items: center;      /* 内容水平居中 */
+    justify-content: flex-start; /* 内容从最顶部开始排，才能往下滚 */
 }
 
 .content-section.active {
@@ -73,23 +85,153 @@ body, html {
 .overlay.darker { background: rgba(0,0,0,0.7); }
 
 /* 第一页排版 */
-.text-content { max-width: 800px; text-align: center; padding: 20px; }
-.year { color: var(--accent); font-size: 18px; letter-spacing: 4px; font-family: 'Inter'; margin-bottom: 10px; }
-.main-title { font-family: 'Cinzel', serif; font-size: 55px; line-height: 1.2; margin: 0 0 30px 0; }
+.text-content { max-width: 1200px; width: 90%; text-align: center; margin: 0 auto; }
+#history.content-section { align-items: flex-start; flex-direction: column; justify-content: flex-start; padding-top: 20px; }
+.main-title { font-family: 'Cinzel', serif; font-size: 55px; line-height: 1.2; margin: 0 0 20px 0; }
 .text-box { background: rgba(0,0,0,0.5); padding: 30px; border-left: 3px solid var(--accent); text-align: left; line-height: 1.8; font-size: 16px; color: #ddd; }
-.text-box p { margin-bottom: 15px; }
+.text-box p { margin-bottom: 15px; text-align: justify; }
+.text-box ul { margin: 0; padding-left: 20px; color: #ddd; }
+.text-box li { margin-bottom: 10px; }
+.intro-box { margin-bottom: 20px; }
+.history-subtitle { font-family: 'Cinzel', serif; font-size: 34px; color: var(--accent); margin: 0; }
+.food-grid { display: grid; gap: 2px; margin-top: 50px; }
+.food-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; list-style: none; padding: 0; margin: 10px 0 0; }
+.food-item { display: flex; flex-direction: column; gap: 12px; }
+.food-item img { width: 100%; height: 300px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+.food-item p { margin: 0; }
+.additional-info { margin: 20px auto 40px; }
+.video-carousel { width: 80%; max-width: 960px; margin: 12px auto 0; text-align: left; }
+.video-title { font-family: 'Cinzel', serif; color: var(--accent); margin: 0 0 10px 0; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: #000; }
+.video-frame video { width: 100%; height: 100%; object-fit: cover; }
+.video-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.video-nav.prev { left: 10px; }
+.video-nav.next { right: 10px; }
+.video-reference { margin-top: 10px; font-size: 14px; color: #ccc; }
+.video-reference a { color: var(--accent); text-decoration: none; }
+.video-reference a:hover { text-decoration: underline; }
+
+@media (max-width: 900px) {
+    .food-list { grid-template-columns: 1fr; }
+    .video-carousel { width: 100%; }
+    .video-nav { width: 36px; height: 36px; font-size: 18px; }
+    .process-step { flex-direction: column; }
+    .process-video-carousel { width: 100%; }
+}
 
 /* 第二页卡片 */
-.process-wrapper { width: 90%; max-width: 1200px; }
-.section-title { font-family: 'Cinzel', serif; font-size: 40px; color: var(--accent); }
-.process-flex { display: flex; gap: 30px; }
-.step-card { flex: 1; background: rgba(20,20,20,0.8); padding: 25px; border-top: 3px solid var(--accent); }
-.step-card img { width: 100%; height: 200px; object-fit: cover; margin-bottom: 20px; border-radius: 4px;}
-.step-card h3 { font-family: 'Cinzel', serif; color: var(--accent); font-size: 20px;}
-.step-card p { color: #ccc; line-height: 1.6; font-size: 14px;}
+.process-wrapper { width: 90%; max-width: 1200px; margin: 0 auto; }
+.section-title { font-family: 'Cinzel', serif; font-size: 40px; color: var(--accent); text-align: center; margin-bottom: 30px; }
+.process-step {
+    display: flex; gap: 30px; align-items: center;
+    background: rgba(10,10,10,0.75); border: 1px solid rgba(255,255,255,0.08);
+    padding: 30px; border-radius: 8px; margin: 20px 0;
+}
+.process-step-reverse { flex-direction: row-reverse; }
+.process-media { 
+    flex: 0 0 28%; /* 固定比例，缩小图片 */
+    max-width: 320px; /* 限制最大尺寸，防止过大 */
+}
+.process-media img { width: 100%; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+.process-text { 
+    flex: 1 1 72%; /* 把省下来的空间给文字 */
+}
+.process-text h3 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0; }
+.process-text p { color: #ddd; line-height: 1.8; text-align: justify; }
+#process.content-section {
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding-top: 20px;
+}
+.process-bottom-row {
+    width: 100%; 
+    margin: 40px 0; 
+    display: flex; 
+    gap: 30px; 
+    align-items: stretch; /* 保证左右两边卡片一样高 */
+    box-sizing: border-box;
+}
+.process-bottom-row .process-ready,
+.process-bottom-row .process-video {
+    flex: 1; /* 各占 50% */
+    background: rgba(10, 10, 10, 0.75); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    padding: 30px; 
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start;
+    
+    /* 强制解除宽度限制，让 flex: 1 生效 */
+    margin: 0 !important; 
+    width: auto !important; 
+    max-width: none !important; 
+}
+.process-bottom-row .video-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    padding: 1px; /* 给内边距防止视频吃掉边框 */
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.25); 
+    border-radius: 8px;
+    background: transparent;
+}
+.process-bottom-row .video-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px; /* 微调视频本身的圆角，塞进框里 */
+}
+.process-bottom-row .video-reference {
+    margin-top: 15px; 
+    font-size: 14px;
+    text-align: center; 
+}
+.process-bottom-row .process-ready .process-media img {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* 关键：强制 16:9 比例 */
+    object-fit: cover;    /* 保证图片裁切填满，绝不拉伸变形 */
+    border-radius: 8px;   /* 统一圆角大小 */
+    display: block;       /* 消除底部默认的幽灵空白 */
+}
+.process-bottom-row .process-ready img {
+    width: 100%;
+    aspect-ratio: 16 / 9; 
+    object-fit: cover;    
+    border-radius: 8px;   
+    display: block;       
+    border: 1px solid rgba(255, 255, 255, 0.25); /* 清晰的细白边 */
+}
+.process-bottom-row .process-video,
+.process-bottom-row .process-video-carousel {
+    width: 100% !important; 
+    max-width: none !important; 
+    margin: 0 !important;
+}
+.process-bottom-row h2,
+.process-bottom-row h3,
+.process-bottom-row .history-subtitle,
+.process-bottom-row .video-title {
+    text-align: center !important; 
+    width: 100%;
+    margin: 0 0 20px 0 !important; 
+}
+.process-bottom-row .process-ready,
+.process-bottom-row .process-video {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* 让内容都统一从卡片顶部往下排 */
+}
 
 /* 第三页 AI 探测 */
-.ai-wrapper { width: 90%; max-width: 1000px; }
+.ai-wrapper { width: 90%; max-width: 1200px; margin: 0 auto; }
 .ai-header h1 { font-family: 'Cinzel', serif; font-size: 40px; margin-bottom: 10px;}
 .ai-header span { color: var(--accent); }
 .ai-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;}
@@ -113,13 +255,30 @@ body, html {
 #result-display { background: rgba(0,0,0,0.6); padding: 20px; border-left: 4px solid var(--accent); min-height: 100px;}
 
 /* 第四页 地图 */
-.map-wrapper { width: 100%; height: 100%; position: relative; }
+.map-wrapper { width: 100%; height: 100vh; min-height: 500px; position: relative; }
 .map-info {
-    position: absolute; bottom: 40px; left: 40px; background: rgba(10,10,10,0.9);
+    position: absolute; top: 40px; right: 40px; background: rgba(10,10,10,0.9);
     padding: 30px; border: 1px solid var(--accent); max-width: 300px;
 }
 .map-info h3 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0;}
 .map-info p { margin: 5px 0; color: #ccc;}
+
+.mukah-section {
+    display: flex; gap: 30px; align-items: center;
+    width: 90%; max-width: 1200px; margin: 24px auto 30px;
+    background: rgba(10,10,10,0.75); border: 1px solid rgba(255,255,255,0.08);
+    padding: 30px; border-radius: 8px;
+}
+.melanau-section { flex-direction: row-reverse; }
+.mukah-text { flex: 1 1 60%; }
+.mukah-text h2 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0; }
+.mukah-text p { color: #ddd; line-height: 1.8; text-align: justify; }
+.mukah-media { flex: 1 1 40%; }
+.mukah-media img { width: 100%; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+
+@media (max-width: 900px) {
+    .mukah-section { flex-direction: column; }
+}
 /* =================================
    动态视频背景样式
    ================================= */
@@ -148,4 +307,116 @@ body, html {
 /* 覆盖 .hero-bg，因为第一页现在用视频了 */
 #history .hero-bg {
     display: none;
+}
+
+/* ==========================================
+   🌐 全局设备响应式适配 (Desktop, Tablet, Mobile)
+   请放置在 style.css 的最底部
+   ========================================== */
+
+/* ------------------------------------------
+   💻 1. 平板 & 小屏幕电脑 (max-width: 1024px)
+   ------------------------------------------ */
+@media (max-width: 1024px) {
+    /* 导航栏缩窄间距 */
+    .navbar { padding: 0 20px; }
+    .nav-links a { margin-right: 15px; font-size: 14px; }
+    
+    /* 缩减标题大小 */
+    .main-title { font-size: 45px; }
+    .section-title { font-size: 34px; }
+    .history-subtitle { font-size: 28px; }
+    
+    /* 布局模块间距变小 */
+    .process-step, .mukah-section { gap: 20px; padding: 20px; }
+    
+    /* 第三页 AI 页面 */
+    .ai-upload-grid { grid-template-columns: 1fr; gap: 20px; }
+}
+
+/* ------------------------------------------
+   📱 2. 手机端标准适配 (max-width: 768px)
+   ------------------------------------------ */
+@media (max-width: 768px) {
+    /* --- 全局导航栏 --- */
+    .navbar {
+        height: auto; 
+        min-height: 60px;
+        padding: 10px;
+        flex-direction: column; /* 上下排列 Logo 和 菜单 */
+        gap: 10px;
+    }
+    .nav-logo { font-size: 20px; }
+    .nav-links { 
+        display: flex; flex-wrap: wrap; 
+        justify-content: center; gap: 8px; 
+    }
+    .nav-links a { margin-right: 0; font-size: 13px; }
+    #lang-switch { font-size: 12px; padding: 3px 5px; }
+
+    /* 调整主容器距离顶部的空间，防止被变高的导航栏遮挡 */
+    #main-container { padding-top: 100px; }
+    .content-section { top: 100px; height: calc(100vh - 100px); }
+
+    /* --- 全局排版与文字 --- */
+    .main-title { font-size: 32px; margin-bottom: 15px; }
+    .section-title { font-size: 28px; margin-bottom: 20px; }
+    .text-box { padding: 15px; font-size: 14px; line-height: 1.6; }
+
+    /* --- 第 1 页: 主页 (History) --- */
+    .food-list { grid-template-columns: 1fr; gap: 15px; } /* 食物卡片单列 */
+    .food-item img { height: 250px; }
+    .video-carousel { width: 100%; margin: 0 auto; }
+    .video-nav { width: 36px; height: 36px; font-size: 18px; }
+    .video-nav.prev { left: 5px; }
+    .video-nav.next { right: 5px; }
+
+    /* --- 第 2 页: 制作工序 (Process) --- */
+    .process-wrapper { width: 95%; }
+    .process-step { flex-direction: column; text-align: center; } /* 强制上下结构 */
+    .process-media { max-width: 100%; width: 100%; }
+    .process-text p { text-align: left; }
+    
+    /* 底部两块平分的卡片改为上下排列 */
+    .process-bottom-row { 
+        flex-direction: column; 
+        gap: 20px; 
+        margin: 20px 0;
+    }
+    .process-bottom-row .process-ready,
+    .process-bottom-row .process-video {
+        padding: 15px;
+    }
+
+    /* --- 第 3 页: AI 智能探测 (AI) --- */
+    .ai-wrapper { width: 100%; padding: 0 10px; box-sizing: border-box; }
+    .upload-box { height: 250px; }
+    #analyze-btn { padding: 12px; font-size: 14px; }
+
+    /* --- 第 4 页: 地理位置 (Map) --- */
+    .map-wrapper { height: auto; display: flex; flex-direction: column; }
+    .map-wrapper iframe { height: 350px; order: 2; } /* 地图放在下方 */
+    
+    /* 原本悬浮在右上角的介绍框，改为普通的文字块 */
+    .map-info {
+        position: relative; 
+        top: 0; right: 0; 
+        width: 100%; max-width: 100%;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        order: 1; /* 信息放在地图上方 */
+    }
+    .mukah-section { flex-direction: column; padding: 20px 15px; }
+}
+
+/* ------------------------------------------
+   📱 3. 极窄手机屏幕 (max-width: 480px)
+   ------------------------------------------ */
+@media (max-width: 480px) {
+    .main-title { font-size: 26px; }
+    .nav-links a { font-size: 12px; }
+    /* 导航栏换行后高度进一步增加 */
+    #main-container { padding-top: 110px; }
+    .content-section { top: 110px; height: calc(100vh - 110px); }
+    .text-box { font-size: 13px; }
 }
