@@ -1,33 +1,24 @@
-# ======================================================
-# --- 模块重定向黑客补丁 (Module Redirect Patch) ---
-# 解决 DeepFace 找不到 tensorflow.keras 的终极方案
-# ======================================================
 import os
 import sys
-
-# 1. 强行开启遗留 Keras 模式
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
-
-try:
-    import tf_keras as keras
-    # 2. 核心魔法：告诉 Python，如果有人找 'tensorflow.keras'，就直接把 'tf_keras' 给他
-    sys.modules['tensorflow.keras'] = keras
-    print("✅ 成功映射 tensorflow.keras -> tf-keras")
-except ImportError:
-    print("❌ 映射失败：请确保已运行 pip install tf-keras")
-# ======================================================
-
-# --- 接下来才是你原本的业务代码 ---
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
 
-# 注意这里：由于我们刚才在 main.py 所在的根目录运行，这里的 import 必须根据你的目录结构微调
+# --- 1. 核心补丁 (保留之前的 Keras 修复) ---
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+import tf_keras as keras
+sys.modules['tensorflow.keras'] = keras
+
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # 新增
+from fastapi.responses import FileResponse    # 新增
+
 from app.perception_pipeline import analyze_single_frame
 from app.bayesian import get_action_from_detections, get_quality_probability
 
-app = FastAPI(title="SagoCraft AI Master Server")
+app = FastAPI()
+
+# 允许跨域 (虽然合一后不需要了，但保留以防万一)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,34 +27,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- 核心黑科技：挂载前端文件夹 ---
+# 假设你的目录结构是 Sago_CNNs/frontend/index.html
+# 我们告诉 FastAPI：去上一层目录找 frontend 文件夹
+frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
+
+# 接口：AI 检测
 @app.post("/api/scan_frame")
-async def scan_frame(file: UploadFile = File(...)):
-    # 1. 接收图片
+async def scan_frame(file: UploadFile = File(...), track: str = Form("false")):
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    if frame is None:
-        return {"status": "error", "message": "Invalid image format"}
+    if frame is None: return {"status": "error"}
 
-    # 2. 视觉分析 (调用更新后的感知脚本)
-    vision_results = analyze_single_frame(frame)
-    
-    # 3. 贝叶斯逻辑推断
+    is_tracking = True if track.lower() == "true" else False
+    vision_results = analyze_single_frame(frame, track=is_tracking)
     action_name, is_standard = get_action_from_detections(vision_results['detected_objects'])
     quality_score = get_quality_probability(is_standard_action=is_standard)
     
-    # 4. 返回给 Flutter
     return {
         "status": "success",
         "action_recognized": action_name,
         "vision_details": vision_results,
-        "bayesian_inference": {
-            "quality_probability": quality_score,
-            "insight": f"Current action '{action_name}' detected. Quality prediction is active."
-        }
+        "bayesian_inference": {"quality_probability": quality_score, "insight": f"Action: {action_name}"}
     }
 
+# --- 重点：让 FastAPI 直接吐出你的 HTML 页面 ---
 @app.get("/")
-def check():
-    return {"message": "Sago AI Backend is ready with custom model!"}
+async def read_index():
+    return FileResponse(os.path.join(frontend_path, 'index.html'))
+
+# 挂载 CSS, JS 和 图片文件夹
+app.mount("/", StaticFiles(directory=frontend_path), name="static")
