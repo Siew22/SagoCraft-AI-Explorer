@@ -20,6 +20,7 @@ let historyVideoPlayer = null;
 let historyVideoTitle = null;
 let historyVideoRefLabel = null;
 let historyVideoRef = null;
+let lastAnalysisData = null; 
 
 // ==========================================
 // 2. 多语言字典
@@ -185,20 +186,17 @@ const translations = {
 
 // 2.5 修改渲染结果的逻辑，让它读取字典
 function renderResultBox(container, data) {
-    const lang = translations[currentLanguage]; // 关键：获取当前选中的语言包
+    const lang = translations[currentLanguage]; // 关键：获取当前语言
     const prob = (data.bayesian_inference?.quality_probability * 100).toFixed(1);
     const objects = data.vision_details?.detected_objects.map(o => o.object_name).join(', ') || 'None';
     
-    // 如果是 Idle 状态，也翻译一下
-    let displayAction = data.action_recognized;
-    if (displayAction === "Idle / Observing") displayAction = lang.idle;
-
+    // 👇 全部使用 lang.xxx 变量，不再写死华文
     container.innerHTML = `
         <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${displayAction}</h3>
+            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${translateAction(data.action_recognized)}</h3>
             <p style="margin:10px 0 5px 0;"><b>${lang.res_quality}:</b> <span style="color:#00FF00">${prob}%</span></p>
             <p style="margin:5px 0;"><b>${lang.res_items}:</b> ${objects}</p>
-            <p style="font-size:13px; color:#aaa; font-style:italic; margin-top:10px;"><b>${lang.res_insight}:</b> ${data.bayesian_inference?.insight || ''}</p>
+            <p style="font-size:13px; color:#aaa; font-style:italic; margin-top:10px;"><b>${lang.res_insight}:</b> Detected ${translateAction(data.action_recognized)}</p>
         </div>
     `;
 }
@@ -266,6 +264,12 @@ function changeLanguage(lang) {
         if(translations[lang][key]) el.innerHTML = translations[lang][key];
     });
     updateHistoryVideoMeta();
+
+    // 👇 新增：切换语言时，如果右边有分析结果，立刻重新翻译渲染！
+    if (lastAnalysisData) {
+        const resultDiv = document.getElementById('upload-results');
+        if(resultDiv) renderResultBox(resultDiv, lastAnalysisData);
+    }
 }
 
 function initHistoryVideoCarousel() {
@@ -402,17 +406,20 @@ function updateLiveOverlay(data) {
  * @param {HTMLCanvasElement} canvas 画布元素
  * @param {Object} data 后端返回的 JSON
  */
+/**
+ * 升级版绘图函数：支持智能文字避让
+ */
 function drawDetections(source, canvas, data) {
     const ctx = canvas.getContext('2d');
     
-    // 步骤1：对齐画布与显示尺寸 (解决框框跑偏问题)
-    canvas.width = source.clientWidth || source.width;
-    canvas.height = source.clientHeight || source.height;
+    // 1. 同步物理显示尺寸
+    canvas.width = source.clientWidth;
+    canvas.height = source.clientHeight;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 步骤2：计算缩放比例 (后端坐标是基于原图分辨率的)
-    const sourceWidth = source.videoWidth || source.naturalWidth || source.width;
-    const sourceHeight = source.videoHeight || source.naturalHeight || source.height;
+    // 2. 计算缩放比例
+    const sourceWidth = source.videoWidth || source.naturalWidth;
+    const sourceHeight = source.videoHeight || source.naturalHeight;
     const scaleX = canvas.width / sourceWidth;
     const scaleY = canvas.height / sourceHeight;
 
@@ -420,30 +427,40 @@ function drawDetections(source, canvas, data) {
         data.vision_details.detected_objects.forEach(obj => {
             const [x1, y1, x2, y2] = obj.bounding_box;
             
-            // 计算屏幕实际位置
             const rx = x1 * scaleX;
             const ry = y1 * scaleY;
             const rw = (x2 - x1) * scaleX;
             const rh = (y2 - y1) * scaleY;
 
-            // 绘制绿色方框
-            ctx.strokeStyle = "#00FF00";
+            // 设置颜色
+            const isHuman = obj.object_name.toLowerCase() === 'human';
+            const themeColor = isHuman ? "#3498db" : "#00FF00"; // 人用蓝色，物品用绿色
+
+            // --- 1. 画矩形框 ---
+            ctx.strokeStyle = themeColor;
             ctx.lineWidth = 3;
             ctx.strokeRect(rx, ry, rw, rh);
 
-            // 绘制文字背景标签
-            ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
-            const gender = obj.attributes.gender ? ` | ${obj.attributes.gender}` : "";
-            const idStr = obj.object_id ? ` ID:${obj.object_id}` : "";
-            const label = `${obj.object_name}${idStr}${gender}`;
-            
+            // --- 2. 智能计算标签位置 ---
+            const idText = obj.object_id ? ` ID:${obj.object_id}` : "";
+            const label = `${obj.object_name}${idText}`;
             ctx.font = "bold 14px Inter, Arial";
-            const labelWidth = ctx.measureText(label).width;
-            ctx.fillRect(rx, ry - 25, labelWidth + 10, 25);
+            const labelWidth = ctx.measureText(label).width + 10;
+            
+            // 如果 y 坐标太靠顶 (小于 30像素)，就把标签画在框内，否则画在框外上方
+            let labelY = ry - 5; 
+            if (ry < 30) {
+                labelY = ry + 20; // 画在框内
+            }
 
-            // 绘制文字
-            ctx.fillStyle = "black";
-            ctx.fillText(label, rx + 5, ry - 7);
+            // --- 3. 画标签背景 ---
+            ctx.fillStyle = themeColor;
+            // 矩形背景：x, y(减去高度), width, height
+            ctx.fillRect(rx, labelY - 18, labelWidth, 22);
+
+            // --- 4. 画标签文字 ---
+            ctx.fillStyle = "white";
+            ctx.fillText(label, rx + 5, labelY);
         });
     }
 }
@@ -609,6 +626,7 @@ async function captureAndTrack() {
         try {
             const response = await fetch(API_URL, { method: 'POST', body: formData });
             const data = await response.json();
+            lastAnalysisData = data; // 👈 【只需要加这一行！】保存数据，供切换语言使用
             
             const overlay = document.getElementById('canvas-overlay');
             drawDetections(video, overlay, data);
@@ -623,4 +641,16 @@ async function captureAndTrack() {
             `;
         } catch (e) { console.error("Real-time API error"); }
     }, 'image/jpeg', 0.5);
+}
+
+// 👇 新增：把后端英文动作翻译成当前语言
+function translateAction(action) {
+    if (!action) return "Unknown";
+    const lang = translations[currentLanguage];
+    const a = action.toLowerCase();
+    if (a.includes("idle")) return lang.idle;
+    if (a.includes("sifting")) return lang.sifting;
+    if (a.includes("roasting")) return lang.roasting;
+    if (a.includes("packaging")) return lang.packaging;
+    return action;
 }

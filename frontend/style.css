@@ -256,11 +256,20 @@ body, html {
 /* 2. 核心：预览容器 */
 #preview-container {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: inline-block; /* 关键：紧贴图片大小 */
+    line-height: 0;        /* 消除图片下方的幽灵空隙 */
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+#upload-canvas, #result-canvas, #canvas-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin-top: 15px;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
 }
 
 /* 3. 强制图片自适应宽度，不超出屏幕 */
@@ -271,15 +280,6 @@ body, html {
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     display: block; /* 消除底部间隙 */
-}
-
-/* 4. 画布覆盖层：必须绝对定位且大小由 JS 动态控制 */
-#upload-canvas, #result-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none; /* 确保不挡住点击事件 */
-    z-index: 10;
 }
 
 /* 5. 调整下方文字卡片的间距，防止重叠 */
