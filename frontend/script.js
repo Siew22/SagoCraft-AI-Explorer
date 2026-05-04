@@ -1,571 +1,428 @@
-/**
- * SagoCraft AI Explorer - 核心交互脚本
- * 功能：多语言切换、页面导航、文件上传分析、实时摄像头追踪绘图
- */
-
-// ==========================================
-// 1. 全局配置
-// ==========================================
-// 在全栈模式下，直接使用相对路径即可。
-// 如果是跨域调试，请改为 "http://127.0.0.1:8000/api/scan_frame"
-const API_BASE = "https://juliette-unattempted-tammara.ngrok-free.dev"; 
-const API_URL = `${API_BASE}/api/scan_frame`;
-
-let currentLanguage = 'en';
-let liveInterval = null;
-let stream = null;
-let historyVideoIndex = 0;
-let historyVideoTimer = null;
-let historyVideoPlayer = null;
-let historyVideoTitle = null;
-let historyVideoRefLabel = null;
-let historyVideoRef = null;
-
-// ==========================================
-// 2. 多语言字典
-// ==========================================
-const translations = {
-    zh: {
-        nav_history: "主页", nav_process: "制作工序", nav_ai: "智能探测", nav_map: "地理位置",
-        hist_intro_title: "简介与历史",
-        hist_intro_p1: "砂拉越的马兰诺族与硕莪树（rumbia）息息相关，他们是其主要的种植者和消费者。在1940年代日据时期，硕莪成为了当地重要的主食。沐胶是砂拉越最大的硕莪种植区，其他产区还包括达拉, 玛都, 达若和乌也。",
-        hist_food_title: "传统硕莪美食",
-        hist_food_item1: "硕莪粉与硕莪黏糊： 当地人将硕莪粉（lemantak）加入热水搅拌，制成硕莪黏糊 (linut) ——一种浓稠胶状的主食，通常搭配参巴峇拉煎 (sambal belacan) 和各种配菜食用，用来替代米饭。",
-        hist_food_item2: "硕莪粒 (Bulu)： 这种花生般大小的传统硕莪粒非常适合作为小吃，通常搭配 umai 或烤鱼一起享用。虽然传统的制作过程复杂且耗时，但马兰诺族至今依然保留并传承着这项手艺。",
-        melanau_title: "马兰诺族",
-        melanau_p1: "马兰诺族是砂拉越的原住民，属于南岛语族，也是该州最早的内陆居民之一。根据 Morris（1991）的研究，他们在语言和社会上与 加影族 (Kajang)、加央族（Kayan）、肯雅族（Kenyah）和比达友族（Bidayuh）有着密切联系。沐胶河和乌也是他们从内陆向沿海地区迁徙的古老路线，如今他们的村落大多建在河畔和海边。",
-        melanau_p2: "迁徙到沿海后，他们经历了两次主要的身份转变：首先是为了适应沿海环境而改变的文化习俗，其次是伊斯兰化的影响。如今，大多数马兰诺人信奉伊斯兰教，部分信奉基督教，但仍有少数人保留着对海神 “inah” 或 “ipok” 的传统信仰。",
-        melanau_p3: "在过去，马兰诺族居住在独特的三层高脚屋中，以方便防御敌人的攻击。随着时代变迁，现代的马兰诺人已经改住独立的房屋。他们主要聚居在北部拉让河谷、依干、玛都-达若、沐胶、乌也和民都鲁等沿海地区，同时也分布在古晋、诗巫和美里等主要城市。",
-        sago_title: "硕莪",
-        sago_p1: "在过去，硕莪是马兰诺族的主要食物，也是他们替代米饭的日常主食。它有几种著名的当地种类，如沐胶、美冬和杜伯的硕莪。制作这项传统美食的原料包括硕莪粉、椰奶、细干椰丝、盐以及稻米粉。",
-        additional_info_title: "观看视频",
-        video_title_mukah: "关于沐胶的更多信息",
-        video_title_melanau: "关于马兰诺族的更多信息",
-        video_title_sagu: "关于硕莪的更多信息",
-        process_video_name: "工序视频",
-        video_reference_label: "参考:",
-        process_video_title: "工序视频",
-        mukah_title: "沐胶",
-        mukah_p1: "沐胶 位于砂拉越中部，面朝南中国海，是砂拉越的第 10 省。其总面积为 6,997.61 平方公里，人口达 124,311 人（2008年），多数居民为马兰诺族。",
-        mukah_p2: "沐胶 于 2002 年 3 月 1 日正式升格为省，行政中心设在 沐胶 县。目前，该省下辖 5 个县（沐胶, 达拉, 玛都, 达若和丹绒玛尼 ）以及 3 个副县（万年烟, 乌也和依干 ）。",
-        mukah_p3: "沐胶 省内的所有地区均可通过陆路到达。前往 沐胶 镇非常方便，搭乘MasWings航班前往 古晋或美里均只需 1 小时航程。陆路方面，游客可从诗巫或民都鲁驱车前往，其中民都鲁距离最近，经沿海公路仅需 2 小时车程。此外，从诗巫乘坐快艇前往达拉镇也是一种选择，航程同样约 2 小时。",
-        proc_title: "硕莪制作过程",
-        proc_step1_title: "1. Tubeng Balau (砍伐)",
-        proc_step1_desc: "硕莪树通常在开花前砍伐，因为此时其茎干内的淀粉含量最高。每棵硕莪树可产出 150 至 300 公斤的淀粉。",
-        proc_step2_title: "2. Marut (削碎)",
-        proc_step2_desc: "剥去树皮 (Ungun) 后，将髓心 (Sei Balau) 放置在由两根原木绑成的 Lagan 上。接着使用刨丝器 (Parut) 将其削成碎末状，称为 Pou。",
-        proc_step3_title: "3. Menyak (提取)",
-        proc_step3_desc: "将 Pou 带到名为 Nyanan（或 Jagen）的工坊，放在亚答叶席 (Idaih) 上。使用由硕莪叶柄 (Ukap balau) 制成的圆锥形水桶 (Terusueng) 舀取河水混合。工人们光着脚踩踏揉捏以提取生硕莪淀粉 (Sei)，淀粉会沉淀在容器 (Jalur) 底部，随后通过末端的小孔 (Serebut) 排出多余的水分。",
-        proc_step4_title: "4. Mela'uek (清洗)",
-        proc_step4_desc: "收集沉淀在底部的 Sei，将其放在木船 (Salui) 上的粗棉布 (Tapih) 中进行多次清洗和过滤，以彻底去除杂质。",
-        proc_step5_title: "5. Mengulud (揉捏)",
-        proc_step5_desc: "将洗净的 Sei 与椰丝 (Benyuh Parut)、米糠 (Dabou Padai) 和盐 (Sia) 混合。随后在特制的亚答叶席 (Kejangan) 上反复滚动揉捏。",
-        proc_step6_title: "6. Mengugoh (成型)",
-        proc_step6_desc: "经过揉捏后，使用悬挂在绳子上的漏勺 (Takueang) 进行筛分，使混合物形成圆润的小颗粒。",
-        proc_step7_title: "7. Mu'ui (烹煮)",
-        proc_step7_desc: "将生硕莪粒放在黏土炉 (Belanga) 上烤制，期间需不时摊开以确保受热均匀。冷却后存放在密封容器中，呈褐色的成品被称为 Sagok，通常搭配熏鱼 (Jekan Ipuong)、umai 或咖喱肉汁 (Keliseh) 一起享用。",
-        proc_final_title: "即食",
-        ai_title: "硕莪<span>追踪</span>", ai_subtitle: "请选择照片/影片上传，或开启实时追踪模式进行现场探测。",
-        ai_drop: "点击或拖拽上传", ai_format: "支持 JPG, PNG, MP4 格式",
-        ai_can_detect: "🎯 可探测目标：", ai_target1: "传统泥炉 (Belanga)", ai_target2: "摇筛工具 (Nyiru)", ai_target3: "操作工人 (Worker)", ai_target4: "包装成品 (Sago Pack)",
-        ai_btn: "开始分析",ai_mode_upload: "文件上传模式", ai_mode_live: "实时追踪模式", ai_live_title: "实时数据反馈", ai_live_waiting: "等待检测结果...",
-        map_title: "硕莪工厂", map_desc: "达拉, 沐胶, 砂拉越",
-        map_text:"这里是硕莪文化保存最完整的地区，也是我们AI数据集采集的核心区域。",
-        res_process: "推断工序",
-        res_quality: "质量预测分数",
-        res_insight: "AI 专家建议",
-        res_items: "检测到物体"
-    },
-    en: {
-        nav_history: "Home", nav_process: "Process", nav_ai: "AI Detection", nav_map: "Location",
-        hist_intro_title: "Introduction & History",
-        hist_intro_p1: "The Melanau community in Sarawak is deeply connected to the sago palm (rumbia), being its primary cultivators and consumers. During the 1940s Japanese occupation, sago became a crucial staple food. Today, Mukah is the largest sago cultivation area in Sarawak, alongside Matu Daro, Dalat, and Oya.",
-        hist_food_title: "Traditional Sago Delicacies",
-        hist_food_item1: "Lemantak & Linut: Sago flour (lemantak) is used to make linut, a thick, glue-like staple dish eaten with sambal belacan and side dishes as a substitute for rice.",
-        hist_food_item2: "Sago Balls (Bulu): These traditional, peanut-sized sago beads are enjoyed as snacks, perfectly paired with umai or grilled fish. Although the traditional process is complex and time-consuming, the Melanau people proudly preserve this culinary heritage today.",
-        melanau_title: "Melanau",
-        melanau_p1: "The Melanau are an Austronesian indigenous group and among the earliest inland settlers of Sarawak. According to Morris (1991), they share linguistic and social ties with the Kajang, Kayan, Kenyah, and Bidayuh tribes. Batang Mukah and Oya served as their ancient migration routes from the inland to the coast, where their settlements are now mostly built along rivers and shorelines.",
-        melanau_p2: "After migrating, they underwent two major identity shifts: adapting their culture to the coastal environment, and later, Islamization. Today, the majority of the Melanau are Muslims, with some practicing Christianity. However, a few still hold on to traditional beliefs in the sea spirit, known locally as \"inah\" or \"ipok\".",
-        melanau_p3: "In the past, the Melanau built unique three-story tall houses for defense against enemy attacks. Today, they have adapted to modern lifestyles by living in separate, individual houses. Their population is concentrated in coastal areas such as the northern Rajang river valley, Igan, Matu-Daro, Mukah, Oya, and Bintulu, as well as in major cities like Kuching, Sibu, and Miri.",
-        sago_title: "Sago",
-        sago_p1: "In the past, sago was the primary staple food and the main substitute for rice among the Melanau community. There are several well-known local varieties, such as Sago Mukah, Sago Medong, and Sago tupek. This traditional delicacy is prepared using authentic ingredients including lemantak (sago flour), coconut milk, fine desiccated coconut, salt, and rice powder.",
-        additional_info_title: "Watch the Video",
-        video_title_mukah: "More info about Mukah",
-        video_title_melanau: "More info about Melanau",
-        video_title_sagu: "More info about Sagu",
-        process_video_name: "Process Video",
-        video_reference_label: "Reference:",
-        process_video_title: "Process Video",
-        mukah_title: "Mukah",
-        mukah_p1: "Located in the central region of Sarawak facing the South China Sea, Mukah is the 10th administrative division of the state. It covers 6,997.61 square kilometers with a population of 124,311 (2008), predominantly made up of the Melanau ethnic group.",
-        mukah_p2: "Mukah was officially elevated to a Division on March 1, 2002, with Mukah District as its administrative center. Currently, it consists of five districts—Mukah, Dalat, Matu, Daro, and Tanjung Manis—along with three sub-districts: Balingian, Oya, and Igan.",
-        mukah_p3: "All districts in Mukah are fully accessible by road. The town of Mukah can be reached by air via MasWings flights connecting to Kuching and Miri, each taking about an hour. By land, it is accessible from Sibu and Bintulu, with Bintulu being the closest city at just a two-hour drive via the coastal road. Alternatively, a two-hour speedboat ride is available from Sibu to Dalat town.",
-        proc_title: "Process of Making Sago",
-        proc_step1_title: "1. Tubeng Balau (Felling)",
-        proc_step1_desc: "The sago palm is felled just before flowering, when its stem is richest in starch. A single palm can yield between 150 to 300 kg of starch.",
-        proc_step2_title: "2. Marut (Shredding)",
-        proc_step2_desc: "After removing the bark (Ungun), the sago pith (Sei Balau) is placed on a Lagan (two tied logs with a small gap). A shredder (Parut) is then used to produce shredded pith called Pou.",
-        proc_step3_title: "3. Menyak (Extraction)",
-        proc_step3_desc: "The Pou is brought to an extraction house (Nyanan or Jagen) and placed onto a nypa leaf mat (Idaih). It is mixed with river water drawn using a conical bucket (Terusueng) made of a sago frond (Ukap balau). The extraction is done by trampling and kneading the wet Pou barefoot to produce raw sago starch (Sei). This settles at the bottom of a container (Jalur), and the excess water is drained through a small hole (Serebut).",
-        proc_step4_title: "4. Mela'uek (Cleaning)",
-        proc_step4_desc: "The settled Sei is collected and placed on a cheesecloth (Tapih) inside a boat (Salui). It is washed and strained repeatedly to remove any impurities.",
-        proc_step5_title: "5. Mengulud (Kneading)",
-        proc_step5_desc: "The raw Sei is mixed with shredded coconut (Benyuh Parut), rice bran (Dabou Padai), and salt (Sia). The mixture is repeatedly rolled and kneaded on a special nypa mat known as Kejangan.",
-        proc_step6_title: "6. Mengugoh (Pearling)",
-        proc_step6_desc: "Following the Mengulud process, the mixture is sifted using a rope-suspended colander (Takueang) to form small, round grains.",
-        proc_step7_title: "7. Mu'ui (Cooking)",
-        proc_step7_desc: "These raw sago pearls are cooked on a clay oven (Belanga) and must be spread occasionally to cook evenly. Once cooled, the brownish end product, known as Sagok, is stored in tight containers and perfectly enjoyed with smoked fish (Jekan Ipuong), umai, or curry gravy (Keliseh).",
-        proc_final_title: "Ready-to-Eat",
-        ai_title: "SAGO <span>TRACKER</span>", ai_subtitle: "Upload media or start live tracking mode for instant AI analysis.",
-        ai_drop: "Click or Drag to Upload", ai_format: "Supports JPG, PNG, MP4",
-        ai_can_detect: "🎯 Detectable Targets:", ai_target1: "Clay Oven (Belanga)", ai_target2: "Bamboo Sieve (Nyiru)", ai_target3: "Worker", ai_target4: "Sago Pack",
-        ai_btn: "START ANALYSIS", ai_mode_upload: "File Upload Mode", ai_mode_live: "Live Tracking Mode", ai_live_title: "LIVE FEED DATA", ai_live_waiting: "Waiting for detection results...",
-        map_title: "SAGO FACTORY", map_desc: "Dalat, Mukah, Sarawak",
-        map_text:"This is the area where sago culture is best preserved, and it is also the core region for our AI dataset collection.",
-        res_process: "Inferred Process",
-        res_quality: "Quality Prediction",
-        res_insight: "AI Expert Insight",
-        res_items: "Detected Objects"
-    },
-    ms: {
-        nav_history: "Laman Utama", nav_process: "Proses", nav_ai: "Pengesanan AI", nav_map: "Lokasi",
-        hist_intro_title: "Pengenalan & Sejarah",
-        hist_intro_p1: "Masyarakat Melanau di Sarawak sangat sinonim dengan pokok sagu (rumbia), sebagai penanam dan pengguna utamanya. Semasa pendudukan Jepun pada 1940-an, sagu menjadi makanan ruji yang penting bagi penduduk tempatan. Mukah merupakan kawasan penanaman sagu terbesar di Sarawak, selain Matu Daro, Dalat, dan Oya.",
-        hist_food_title: "Hidangan Tradisional Sagu",
-        hist_food_item1: "Lemantak & Linut: Tepung sagu (lemantak) dibancuh dengan air panas untuk membuat linut, hidangan pekat dan melekit yang dinikmati bersama sambal belacan dan lauk-pauk sebagai pengganti nasi.",
-        hist_food_item2: "Bebola Sagu (Bulu): Bebola sagu tradisional bersaiz kacang tanah ini sesuai dijadikan snek dan dimakan bersama umai atau ikan bakar. Proses pembuatannya adalah rumit dan memakan masa, namun masyarakat Melanau masih mengekalkan kaedah tradisional ini sehingga kini.",
-        melanau_title: "Melanau",
-        melanau_p1: "Kaum Melanau merupakan penduduk asli Austronesia dan antara peneroka terawal di kawasan pedalaman Sarawak. Menurut Morris (1991), mereka mempunyai hubungan linguistik dan sosial dengan suku Kajang, Kayan, Kenyah, dan Bidayuh. Batang Mukah dan Oya menjadi jalur migrasi purba mereka dari kawasan hulu ke pesisir pantai, dan kini perkampungan mereka kebanyakannya dibina di tepi sungai dan berdekatan pantai.",
-        melanau_p2: "Selepas berhijrah ke pesisir pantai, kaum Melanau melalui dua perubahan identiti utama: penyesuaian budaya dengan persekitaran baharu dan pengaruh Islamisasi. Kini, majoriti kaum Melanau beragama Islam dan sebahagiannya beragama Kristian. Walau bagaimanapun, masih terdapat segelintir yang mengekalkan kepercayaan tradisional terhadap tuhan laut yang dikenali sebagai \"inah\" atau \"ipok\".",
-        melanau_p3: "Pada zaman dahulu, masyarakat Melanau tinggal di rumah tinggi tiga tingkat yang unik untuk memudahkan mereka mempertahankan diri daripada serangan musuh. Mengikut peredaran zaman, mereka kini mendiami rumah moden yang berasingan. Populasi mereka tertumpu di kawasan pesisir pantai seperti lembah utara Sungai Rajang, Igan, Matu-Daro, Mukah, Oya, dan Bintulu, serta boleh didapati di bandar utama seperti Kuching, Sibu, dan Miri.",
-        sago_title: "Sagu",
-        sago_p1: "Pada masa dahulu, sagu merupakan makanan ruji utama dan pengganti nasi bagi masyarakat Melanau. Terdapat beberapa variasi tempatan yang terkenal, seperti Sagu Mukah, Sagu Medong, dan Sagu tupek. Hidangan tradisional ini dihasilkan menggunakan adunan bahan-bahan asli termasuk lemantak (tepung sagu), santan, kelapa kering halus, garam, dan serbuk padi.",
-        additional_info_title: "Tonton Video",
-        video_title_mukah: "Maklumat lanjut tentang Mukah",
-        video_title_melanau: "Maklumat lanjut tentang Melanau",
-        video_title_sagu: "Maklumat lanjut tentang Sagu",
-        process_video_name: "Video Proses",
-        video_reference_label: "Rujukan:",
-        process_video_title: "Video Proses",
-        mukah_title: "Mukah",
-        mukah_p1: "Bahagian Mukah terletak di wilayah tengah Sarawak dan menghadap Laut China Selatan. Ia merupakan bahagian ke-10 di Sarawak dengan keluasan 6,997.61 kilometer persegi dan populasi 124,311 orang (2008), di mana kaum Melanau merupakan penduduk majoriti.",
-        mukah_p2: "Mukah rasmi menjadi sebuah Bahagian pada 1 Mac 2002 dengan pusat pentadbiran di Daerah Mukah. Kini, ia merangkumi lima daerah iaitu Mukah, Dalat, Matu, Daro, dan Tanjung Manis, serta tiga daerah kecil iaitu Balingian, Oya, dan Igan.",
-        mukah_p3: "Semua daerah di Mukah kini mudah dihubungi melalui jalan raya. Bandar Mukah boleh diakses melalui penerbangan MasWings ke Kuching dan Miri yang masing-masing mengambil masa satu jam. Untuk perjalanan darat, ia boleh dihubungi dari Sibu atau Bintulu, di mana Bintulu merupakan bandar terdekat dengan jarak sekitar dua jam melalui jalan pesisir. Selain itu, pengunjung juga boleh menaiki bot laju dari Sibu ke pekan Dalat yang mengambil masa dua jam.",
-        proc_title: "Proses Menghasilkan Sagu",
-        proc_step1_title: "1. Tubeng Balau (Penebangan)",
-        proc_step1_desc: "Pokok sagu ditebang sejurus sebelum berbunga apabila kandungan kanjinya paling tinggi. Setiap pokok mampu menghasilkan sekitar 150 hingga 300 kg kanji.",
-        proc_step2_title: "2. Marut (Pemprosesan Empulur)",
-        proc_step2_desc: "Selepas kulit kayu (Ungun) dibuang, empulur (Sei Balau) diletakkan di atas Lagan (dua batang kayu yang diikat dengan celah kecil). Alat pemarut (Parut) kemudiannya digunakan untuk menghasilkan empulur hancur yang dipanggil Pou.",
-        proc_step3_title: "3. Menyak (Pengekstrakan Kanji)",
-        proc_step3_desc: "Pou dibawa ke rumah perahan (Nyanan atau Jagen) dan diletakkan di atas tikar nipah (Idaih). Ia dicampur dengan air sungai menggunakan baldi kon (Terusueng) yang diperbuat daripada pelepah sagu (Ukap balau). Pou dipijak dan diuli tanpa alas kaki untuk mengekstrak campuran air dan kanji mentah (Sei). Campuran ini dikumpul dalam bekas mendapan (Jalur). Setelah Sei mendap, air dibuang melalui lubang kecil bernama Serebut.",
-        proc_step4_title: "4. Mela'uek (Pembersihan)",
-        proc_step4_desc: "Sei yang mendap dikumpul dan diletakkan di atas kain penapis (Tapih) di dalam perahu (Salui). Ia dibasuh dan ditapis berulang kali untuk membuang segala kotoran.",
-        proc_step5_title: "5. Mengulud (Menguli Bahan)",
-        proc_step5_desc: "Kanji mentah (Sei) dicampur dengan kelapa parut (Benyuh Parut), dedak padi (Dabou Padai), dan garam (Sia). Campuran ini digelek dan diuli berulang kali di atas tikar nipah khas yang dipanggil Kejangan.",
-        proc_step6_title: "6. Mengugoh (Membentuk Bebola)",
-        proc_step6_desc: "Selepas proses Mengulud, campuran diayak menggunakan penapis yang digantung dengan tali (Takueang) untuk membentuk butiran bulat yang kecil.",
-        proc_step7_title: "7. Mu'ui (Memasak)",
-        proc_step7_desc: "Bebola sagu mentah dimasak di atas ketuhar tanah liat (Belanga) dan diratakan sentiasa agar masak sekata. Selepas disejukkan, produk akhir berwarna kecoklatan yang dipanggil Sagok ini disimpan di dalam bekas kedap udara, sedia dinikmati bersama ikan salai (Jekan Ipuong), umai, atau kuah kari (Keliseh).",
-        proc_final_title: "Sedia Dimakan",
-        ai_title: "PENGESAN <span>SAGU</span>", ai_subtitle: "Muat naik media atau mulakan mod pengesanan masa nyata.",
-        ai_drop: "Klik untuk Muat Naik", ai_format: "Format JPG, PNG, MP4",
-        ai_can_detect: "🎯 Sasaran Pengesanan:", ai_target1: "Ketuhar (Belanga)", ai_target2: "Penapis (Nyiru)", ai_target3: "Pekerja", ai_target4: "Produk Sagu",
-        ai_btn: "MULA ANALISIS", ai_mode_upload: "Mod Muat Naik Fail", ai_mode_live: "Mod Penjejakan Langsung", ai_live_title: "DATA MAKLUM BALAS LANGSUNG", ai_live_waiting: "Menunggu keputusan pengesanan...",
-        map_title: "SAGO FACTORY", map_desc: "Dalat, Mukah, Sarawak",
-        map_text: "Ini adalah kawasan di mana budaya sagu dipelihara dengan terbaik, dan ia juga merupakan wilayah teras bagi pengumpulan set data AI kami.",
-        res_process: "Proses Dikesan",
-        res_quality: "Ramalan Kualiti",
-        res_insight: "Wawasan Pakar AI",
-        res_items: "Objek Dikesan"
-    }
-};
-
-// 2.5 修改渲染结果的逻辑，让它读取字典
-function renderResultBox(container, data) {
-    const lang = translations[currentLanguage]; // 获取当前语言包
-    const prob = (data.bayesian_inference?.quality_probability * 100).toFixed(1);
-    const objects = data.vision_details?.detected_objects.map(o => o.object_name).join(', ') || 'None';
-
-    container.innerHTML = `
-        <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${data.action_recognized || 'Unknown'}</h3>
-            <p style="margin:10px 0 5px 0;"><b>${lang.res_quality}:</b> <span style="color:#00FF00">${prob}%</span></p>
-            <p style="margin:5px 0;"><b>${lang.res_items}:</b> ${objects}</p>
-            <p style="font-size:13px; color:#aaa; font-style:italic; margin-top:10px;"><b>${lang.res_insight}:</b> ${data.bayesian_inference?.insight || ''}</p>
-        </div>
-    `;
+:root {
+    --accent: #c4a47c; /* 质感金色 */
+    --bg: #0a0a0a;     /* 深邃黑 */
+    --text: #ffffff;
 }
 
-const historyVideos = [
-    {
-        src: "media/mukah.mp4",
-        titleKey: "video_title_mukah",
-        reference: "https://www.youtube.com/watch?v=9OTZleldBpQ"
-    },
-    {
-        src: "media/melanau.mp4",
-        titleKey: "video_title_melanau",
-        reference: "https://www.youtube.com/watch?v=77vJ-iW2I38"
-    },
-    {
-        src: "media/sagu.mp4",
-        titleKey: "video_title_sagu",
-        reference: "https://www.youtube.com/watch?v=Uj5SYO2e4Vo"
-    }
-];
+body, html {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif;
+    height: 100vh; overflow: hidden; /* 防止原生滚动 */
+}
 
-// ==========================================
-// 3. 初始化与页面控制
-// ==========================================
-window.onload = () => {
-    // 绑定语言
-    const langSelector = document.getElementById('lang-switch');
-    if (langSelector) {
-        langSelector.value = currentLanguage;
-        langSelector.onchange = (e) => changeLanguage(e.target.value);
-    }
-    changeLanguage(currentLanguage);
+/* 导航栏 */
+.navbar {
+    position: fixed; top: 0; width: 100%; height: 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 40px; z-index: 1000;
+    background: rgba(10, 10, 10, 0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    box-sizing: border-box;
+}
 
-    // 绑定模式切换
-    document.getElementById('btn-upload-mode').onclick = () => switchMode('upload');
-    document.getElementById('btn-live-mode').onclick = () => switchMode('live');
+.nav-logo { font-family: 'Cinzel', serif; font-size: 24px; letter-spacing: 2px; font-weight: bold;}
+.nav-logo span { color: var(--accent); }
 
-    // 绑定文件上传
-    const fileInput = document.getElementById('file-upload');
-    const dropZone = document.getElementById('drop-zone');
-    if(dropZone) dropZone.onclick = () => fileInput.click();
+.nav-links { display: flex; align-items: center; }
+.nav-links a {
+    color: rgba(255,255,255,0.6); text-decoration: none;
+    margin-right: 30px; font-size: 15px; letter-spacing: 1px;
+    transition: 0.3s; padding-bottom: 5px; border-bottom: 2px solid transparent;
+}
+.nav-links a.active, .nav-links a:hover { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-    fileInput.onchange = handleFileSelect;
-    document.getElementById('analyze-btn').onclick = runUploadAnalysis;
+/* 语言切换下拉框 */
+#lang-switch {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--accent); padding: 5px 10px;
+    border-radius: 4px; font-family: 'Inter'; cursor: pointer; outline: none;
+}
+#lang-switch option { background: var(--bg); color: white; }
 
-    initHistoryVideoCarousel();
-};
+/* 页面切换核心控制（解决重叠Bug） */
+#main-container {
+    position: relative; width: 100%; height: 100vh; padding-top: 80px; box-sizing: border-box;
+}
 
-function showPage(pageId) {
-    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+.content-section {
+    position: absolute; top: 80px; left: 0;
+    width: 100%; height: calc(100vh - 80px);
+    display: none; /* 默认隐藏所有页面 */
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* 让手机端滚动更丝滑 */
+    padding: 40px 0 80px 0; /* 上方加间距，底部多留白防挡住 */
+    box-sizing: border-box;
+}
+#history.content-section, 
+#process.content-section, 
+#ai.content-section, 
+#map.content-section {
+    flex-direction: column;
+    align-items: center;      /* 内容水平居中 */
+    justify-content: flex-start; /* 内容从最顶部开始排，才能往下滚 */
+}
+
+.content-section.active {
+    display: flex; /* 只有加了 active 的才会显示 */
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 背景与遮罩 */
+.hero-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover; background-position: center;
+    filter: brightness(0.35); z-index: -2;
+}
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 100%); z-index: -1;
+}
+.overlay.darker { background: rgba(0,0,0,0.7); }
+
+/* 第一页排版 */
+.text-content { max-width: 1200px; width: 90%; text-align: center; margin: 0 auto; }
+#history.content-section { align-items: flex-start; flex-direction: column; justify-content: flex-start; padding-top: 20px; }
+.main-title { font-family: 'Cinzel', serif; font-size: 55px; line-height: 1.2; margin: 0 0 20px 0; }
+.text-box { background: rgba(0,0,0,0.5); padding: 30px; border-left: 3px solid var(--accent); text-align: left; line-height: 1.8; font-size: 16px; color: #ddd; }
+.text-box p { margin-bottom: 15px; text-align: justify; }
+.text-box ul { margin: 0; padding-left: 20px; color: #ddd; }
+.text-box li { margin-bottom: 10px; }
+.intro-box { margin-bottom: 20px; }
+.history-subtitle { font-family: 'Cinzel', serif; font-size: 34px; color: var(--accent); margin: 0; }
+.food-grid { display: grid; gap: 2px; margin-top: 50px; }
+.food-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; list-style: none; padding: 0; margin: 10px 0 0; }
+.food-item { display: flex; flex-direction: column; gap: 12px; }
+.food-item img { width: 100%; height: 300px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+.food-item p { margin: 0; }
+.additional-info { margin: 20px auto 40px; }
+.video-carousel { width: 80%; max-width: 960px; margin: 12px auto 0; text-align: left; }
+.video-title { font-family: 'Cinzel', serif; color: var(--accent); margin: 0 0 10px 0; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: #000; }
+.video-frame video { width: 100%; height: 100%; object-fit: cover; }
+.video-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.video-nav.prev { left: 10px; }
+.video-nav.next { right: 10px; }
+.video-reference { margin-top: 10px; font-size: 14px; color: #ccc; }
+.video-reference a { color: var(--accent); text-decoration: none; }
+.video-reference a:hover { text-decoration: underline; }
+
+@media (max-width: 900px) {
+    .food-list { grid-template-columns: 1fr; }
+    .video-carousel { width: 100%; }
+    .video-nav { width: 36px; height: 36px; font-size: 18px; }
+    .process-step { flex-direction: column; }
+    .process-video-carousel { width: 100%; }
+}
+
+/* 第二页卡片 */
+.process-wrapper { width: 90%; max-width: 1200px; margin: 0 auto; }
+.section-title { font-family: 'Cinzel', serif; font-size: 40px; color: var(--accent); text-align: center; margin-bottom: 30px; }
+.process-step {
+    display: flex; gap: 30px; align-items: center;
+    background: rgba(10,10,10,0.75); border: 1px solid rgba(255,255,255,0.08);
+    padding: 30px; border-radius: 8px; margin: 20px 0;
+}
+.process-step-reverse { flex-direction: row-reverse; }
+.process-media { 
+    flex: 0 0 28%; /* 固定比例，缩小图片 */
+    max-width: 320px; /* 限制最大尺寸，防止过大 */
+}
+.process-media img { width: 100%; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+.process-text { 
+    flex: 1 1 72%; /* 把省下来的空间给文字 */
+}
+.process-text h3 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0; }
+.process-text p { color: #ddd; line-height: 1.8; text-align: justify; }
+#process.content-section {
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding-top: 20px;
+}
+.process-bottom-row {
+    width: 100%; 
+    margin: 40px 0; 
+    display: flex; 
+    gap: 30px; 
+    align-items: stretch; /* 保证左右两边卡片一样高 */
+    box-sizing: border-box;
+}
+.process-bottom-row .process-ready,
+.process-bottom-row .process-video {
+    flex: 1; /* 各占 50% */
+    background: rgba(10, 10, 10, 0.75); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    padding: 30px; 
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start;
     
-    document.getElementById(pageId).classList.add('active');
-    if(event) event.currentTarget.classList.add('active');
-
-    // 离开AI探测页面时自动关闭摄像头
-    if (pageId !== 'ai') stopWebcam();
+    /* 强制解除宽度限制，让 flex: 1 生效 */
+    margin: 0 !important; 
+    width: auto !important; 
+    max-width: none !important; 
+}
+.process-bottom-row .video-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    padding: 1px; /* 给内边距防止视频吃掉边框 */
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.25); 
+    border-radius: 8px;
+    background: transparent;
+}
+.process-bottom-row .video-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px; /* 微调视频本身的圆角，塞进框里 */
+}
+.process-bottom-row .video-reference {
+    margin-top: 15px; 
+    font-size: 14px;
+    text-align: center; 
+}
+.process-bottom-row .process-ready .process-media img {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* 关键：强制 16:9 比例 */
+    object-fit: cover;    /* 保证图片裁切填满，绝不拉伸变形 */
+    border-radius: 8px;   /* 统一圆角大小 */
+    display: block;       /* 消除底部默认的幽灵空白 */
+}
+.process-bottom-row .process-ready img {
+    width: 100%;
+    aspect-ratio: 16 / 9; 
+    object-fit: cover;    
+    border-radius: 8px;   
+    display: block;       
+    border: 1px solid rgba(255, 255, 255, 0.25); /* 清晰的细白边 */
+}
+.process-bottom-row .process-video,
+.process-bottom-row .process-video-carousel {
+    width: 100% !important; 
+    max-width: none !important; 
+    margin: 0 !important;
+}
+.process-bottom-row h2,
+.process-bottom-row h3,
+.process-bottom-row .history-subtitle,
+.process-bottom-row .video-title {
+    text-align: center !important; 
+    width: 100%;
+    margin: 0 0 20px 0 !important; 
+}
+.process-bottom-row .process-ready,
+.process-bottom-row .process-video {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* 让内容都统一从卡片顶部往下排 */
 }
 
-function changeLanguage(lang) {
-    currentLanguage = lang;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if(translations[lang][key]) el.innerHTML = translations[lang][key];
-    });
-    updateHistoryVideoMeta();
+/* 第三页 AI 探测 */
+.ai-wrapper { width: 90%; max-width: 1200px; margin: 0 auto; }
+.ai-header h1 { font-family: 'Cinzel', serif; font-size: 40px; margin-bottom: 10px;}
+.ai-header span { color: var(--accent); }
+.ai-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;}
+.upload-box {
+    border: 2px dashed rgba(196, 164, 124, 0.5); height: 400px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.4); cursor: pointer; transition: 0.3s; text-align: center;
+}
+.upload-box:hover { border-color: var(--accent); background: rgba(196, 164, 124, 0.1); }
+#preview-container img, #preview-container video { max-width: 100%; max-height: 380px; object-fit: contain;}
+
+.action-panel { display: flex; flex-direction: column; gap: 20px; }
+.instruction-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px;}
+.instruction-box h3 { color: var(--accent); margin-top: 0;}
+.instruction-box ul { padding-left: 20px; line-height: 1.8; color: #ccc;}
+#analyze-btn {
+    padding: 18px; background: var(--accent); color: #000; font-family: 'Inter'; font-weight: bold;
+    border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: 0.3s;
+}
+#analyze-btn:hover { background: #d8b88f; }
+#result-display { background: rgba(0,0,0,0.6); padding: 20px; border-left: 4px solid var(--accent); min-height: 100px;}
+
+/* 第四页 地图 */
+.map-wrapper { width: 100%; height: 100vh; min-height: 500px; position: relative; }
+.map-info {
+    position: absolute; top: 40px; right: 40px; background: rgba(10,10,10,0.9);
+    padding: 30px; border: 1px solid var(--accent); max-width: 300px;
+}
+.map-info h3 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0;}
+.map-info p { margin: 5px 0; color: #ccc;}
+
+.mukah-section {
+    display: flex; gap: 30px; align-items: center;
+    width: 90%; max-width: 1200px; margin: 24px auto 30px;
+    background: rgba(10,10,10,0.75); border: 1px solid rgba(255,255,255,0.08);
+    padding: 30px; border-radius: 8px;
+}
+.melanau-section { flex-direction: row-reverse; }
+.mukah-text { flex: 1 1 60%; }
+.mukah-text h2 { font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0; }
+.mukah-text p { color: #ddd; line-height: 1.8; text-align: justify; }
+.mukah-media { flex: 1 1 40%; }
+.mukah-media img { width: 100%; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+
+@media (max-width: 900px) {
+    .mukah-section { flex-direction: column; }
+}
+/* =================================
+   动态视频背景样式
+   ================================= */
+.video-background {
+    position: fixed; /* 固定在视窗 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: -2; /* 放在最底层 */
+    overflow: hidden;
 }
 
-function initHistoryVideoCarousel() {
-    historyVideoPlayer = document.getElementById('history-video-player');
-    historyVideoTitle = document.getElementById('history-video-title');
-    historyVideoRefLabel = document.getElementById('history-video-ref-label');
-    historyVideoRef = document.getElementById('history-video-ref');
-
-    if (!historyVideoPlayer || !historyVideoTitle || !historyVideoRefLabel || !historyVideoRef) {
-        return;
-    }
-
-    const prevBtn = document.getElementById('history-video-prev');
-    const nextBtn = document.getElementById('history-video-next');
-
-    if (prevBtn) prevBtn.addEventListener('click', () => stepHistoryVideo(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => stepHistoryVideo(1));
-
-    historyVideoPlayer.addEventListener('play', stopHistoryVideoTimer);
-    historyVideoPlayer.addEventListener('ended', startHistoryVideoTimer);
-
-    renderHistoryVideo();
-    startHistoryVideoTimer();
+.video-background video {
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    filter: brightness(0.35); /* 调暗视频，突出文字 */
 }
 
-function stepHistoryVideo(direction) {
-    if (!historyVideos.length) return;
-    historyVideoIndex = (historyVideoIndex + direction + historyVideos.length) % historyVideos.length;
-    renderHistoryVideo();
-    startHistoryVideoTimer();
+/* 覆盖 .hero-bg，因为第一页现在用视频了 */
+#history .hero-bg {
+    display: none;
 }
 
-function startHistoryVideoTimer() {
-    if (historyVideoTimer) clearInterval(historyVideoTimer);
-    if (historyVideos.length < 2) return;
-    historyVideoTimer = setInterval(() => stepHistoryVideo(1), 5000);
-}
+/* ==========================================
+   🌐 全局设备响应式适配 (Desktop, Tablet, Mobile)
+   请放置在 style.css 的最底部
+   ========================================== */
 
-function stopHistoryVideoTimer() {
-    if (historyVideoTimer) {
-        clearInterval(historyVideoTimer);
-        historyVideoTimer = null;
-    }
-}
-
-function renderHistoryVideo() {
-    if (!historyVideoPlayer) return;
-    const item = historyVideos[historyVideoIndex];
-    historyVideoPlayer.pause();
-    historyVideoPlayer.src = item.src;
-    historyVideoPlayer.load();
-    updateHistoryVideoMeta();
-}
-
-function updateHistoryVideoMeta() {
-    if (!historyVideoTitle || !historyVideoRefLabel || !historyVideoRef) return;
-    const item = historyVideos[historyVideoIndex];
-    historyVideoTitle.textContent = translations[currentLanguage]?.[item.titleKey] || "";
-    historyVideoRefLabel.textContent = translations[currentLanguage]?.video_reference_label || "Reference:";
-    historyVideoRef.textContent = item.reference;
-    historyVideoRef.href = item.reference;
-}
-
-// ==========================================
-// 4. AI 检测核心逻辑 (通用绘图函数)
-// ==========================================
-
-/**
- * 在 Canvas 上绘制识别框
- * @param {HTMLVideoElement|HTMLImageElement} source 图像源
- * @param {HTMLCanvasElement} canvas 画布元素
- * @param {Object} data 后端返回的 JSON
- */
-function drawDetections(source, canvas, data) {
-    const ctx = canvas.getContext('2d');
+/* ------------------------------------------
+   💻 1. 平板 & 小屏幕电脑 (max-width: 1024px)
+   ------------------------------------------ */
+@media (max-width: 1024px) {
+    /* 导航栏缩窄间距 */
+    .navbar { padding: 0 20px; }
+    .nav-links a { margin-right: 15px; font-size: 14px; }
     
-    // 步骤1：对齐画布与显示尺寸 (解决框框跑偏问题)
-    canvas.width = source.clientWidth || source.width;
-    canvas.height = source.clientHeight || source.height;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 步骤2：计算缩放比例 (后端坐标是基于原图分辨率的)
-    const sourceWidth = source.videoWidth || source.naturalWidth || source.width;
-    const sourceHeight = source.videoHeight || source.naturalHeight || source.height;
-    const scaleX = canvas.width / sourceWidth;
-    const scaleY = canvas.height / sourceHeight;
-
-    if (data.vision_details && data.vision_details.detected_objects) {
-        data.vision_details.detected_objects.forEach(obj => {
-            const [x1, y1, x2, y2] = obj.bounding_box;
-            
-            // 计算屏幕实际位置
-            const rx = x1 * scaleX;
-            const ry = y1 * scaleY;
-            const rw = (x2 - x1) * scaleX;
-            const rh = (y2 - y1) * scaleY;
-
-            // 绘制绿色方框
-            ctx.strokeStyle = "#00FF00";
-            ctx.lineWidth = 3;
-            ctx.strokeRect(rx, ry, rw, rh);
-
-            // 绘制文字背景标签
-            ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
-            const gender = obj.attributes.gender ? ` | ${obj.attributes.gender}` : "";
-            const idStr = obj.object_id ? ` ID:${obj.object_id}` : "";
-            const label = `${obj.object_name}${idStr}${gender}`;
-            
-            ctx.font = "bold 14px Inter, Arial";
-            const labelWidth = ctx.measureText(label).width;
-            ctx.fillRect(rx, ry - 25, labelWidth + 10, 25);
-
-            // 绘制文字
-            ctx.fillStyle = "black";
-            ctx.fillText(label, rx + 5, ry - 7);
-        });
-    }
-}
-
-// ==========================================
-// 5. 模式 A：文件上传分析
-// ==========================================
-
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const preview = document.getElementById('preview-container');
+    /* 缩减标题大小 */
+    .main-title { font-size: 45px; }
+    .section-title { font-size: 34px; }
+    .history-subtitle { font-size: 28px; }
     
-    // 清空并创建新的预览元素 + Canvas
-    preview.innerHTML = `
-        <div style="position:relative; display:inline-block;">
-            ${file.type.startsWith('image') 
-                ? `<img id="upload-img" src="${url}" style="max-height:400px; border-radius:8px;">`
-                : `<video id="upload-video" src="${url}" controls style="max-height:400px;"></video>`}
-            <canvas id="upload-canvas" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
-        </div>
-    `;
-}
-
-// ==========================================
-// 5. 模式 A：文件上传分析 (加入全视频动态追踪)
-// ==========================================
-
-let uploadTrackingInterval = null; // 用于记录视频定时器
-
-async function runUploadAnalysis() {
-    const fileInput = document.getElementById('file-upload');
-    const resultDiv = document.getElementById('upload-results');
-    if (!fileInput.files[0]) return alert("请先上传照片或视频文件！");
-
-    const file = fileInput.files[0];
+    /* 布局模块间距变小 */
+    .process-step, .mukah-section { gap: 20px; padding: 20px; }
     
-    // 【分支 A：如果用户上传的是 视频】
-    if (file.type.startsWith('video')) {
-        const videoElement = document.getElementById('upload-video');
-        const canvasOverlay = document.getElementById('upload-canvas');
-
-        resultDiv.innerHTML = '<p style="color:var(--accent);">🎥 AI 正在对视频进行逐帧追踪分析...</p>';
-
-        // 1. 让视频自动开始播放
-        videoElement.play();
-
-        // 2. 清理旧的定时器，防止重叠
-        if (uploadTrackingInterval) clearInterval(uploadTrackingInterval);
-
-        // 3. 开启循环：视频一边播，AI 一边检测一边画框
-        uploadTrackingInterval = setInterval(async () => {
-            // 如果用户按了暂停，或者视频播完了，就停止检测
-            if (videoElement.paused || videoElement.ended) {
-                clearInterval(uploadTrackingInterval);
-                if (videoElement.ended) {
-                    resultDiv.innerHTML += '<p style="color:#00FF00; font-weight:bold;">✅ 视频分析完毕！</p>';
-                }
-                return;
-            }
-
-            // 偷偷在后台用一张虚拟画布截取当前视频的这一瞬间
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = videoElement.videoWidth;
-            tempCanvas.height = videoElement.videoHeight;
-            tempCanvas.getContext('2d').drawImage(videoElement, 0, 0);
-
-            // 把这一瞬间变成图片，发给你家里的 3060 显卡
-            tempCanvas.toBlob(async (blob) => {
-                const trackFormData = new FormData();
-                trackFormData.append('file', blob, 'frame.jpg');
-                trackFormData.append('track', 'true'); // 告诉后端开启追踪 ID 模式
-
-                try {
-                    const response = await fetch(API_URL, { method: 'POST', body: trackFormData });
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // 神奇的魔法：把后端返回的框框，画在正在播放的视频上面！
-                        drawDetections(videoElement, canvasOverlay, data);
-                        
-                        // 动态更新旁边的文字分析结果
-                        const prob = data.bayesian_inference?.quality_probability ? (data.bayesian_inference.quality_probability * 100).toFixed(1) : "0.0";
-                        resultDiv.innerHTML = `
-                            <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-                                <h3 style="margin:0; color:var(--accent)">实时推断工序: ${data.action_recognized || 'Unknown'}</h3>
-                                <p><b>当前质量分数:</b> <span style="color:#00FF00">${prob}%</span></p>
-                                <p style="font-size:13px; color:#aaa;"><em>${data.bayesian_inference?.insight || ''}</em></p>
-                            </div>
-                        `;
-                    }
-                } catch (err) {
-                    console.error("视频帧分析网络延迟", err);
-                }
-            }, 'image/jpeg', 0.5); // 用 0.5 的压缩率，保证 ngrok 传输极快！
-        }, 600); // 每 0.6 秒画一次框，完美平衡效果与显卡压力
-
-    } 
-    // 【分支 B：如果用户上传的是 照片 (保持之前的逻辑)】
-    else {
-        resultDiv.innerHTML = '<p style="color:var(--accent);">⌛ AI 视觉引擎正在深度分析中...</p>';
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch(API_URL, { method: 'POST', body: formData });
-            const data = await response.json();
-            
-            if (data.status === "error") throw new Error(data.message || "后端无法解析该画面");
-
-            const mediaEl = document.getElementById('upload-img');
-            const canvasOverlay = document.getElementById('upload-canvas');
-            if(mediaEl && canvasOverlay) drawDetections(mediaEl, canvasOverlay, data);
-
-            const prob = data.bayesian_inference?.quality_probability ? (data.bayesian_inference.quality_probability * 100).toFixed(1) : "0.0";
-            resultDiv.innerHTML = `
-                <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-                    <h3 style="margin:0; color:var(--accent)">推断工序: ${data.action_recognized || 'Unknown'}</h3>
-                    <p><b>质量预测分数:</b> <span style="color:#00FF00">${prob}%</span></p>
-                    <p><b>AI 专家建议:</b> ${data.bayesian_inference?.insight || '无'}</p>
-                </div>
-            `;
-        } catch (err) {
-            resultDiv.innerHTML = `<p style="color:red">❌ 分析失败: ${err.message}</p>`;
-        }
-    }
+    /* 第三页 AI 页面 */
+    .ai-upload-grid { grid-template-columns: 1fr; gap: 20px; }
 }
 
-// ==========================================
-// 6. 模式 B：实时摄像头追踪
-// ==========================================
+/* ------------------------------------------
+   📱 2. 手机端标准适配 (max-width: 768px)
+   ------------------------------------------ */
+@media (max-width: 768px) {
+    /* --- 全局导航栏 --- */
+    .navbar {
+        height: auto; 
+        min-height: 60px;
+        padding: 10px;
+        flex-direction: column; /* 上下排列 Logo 和 菜单 */
+        gap: 10px;
+    }
+    .nav-logo { font-size: 20px; }
+    .nav-links { 
+        display: flex; flex-wrap: wrap; 
+        justify-content: center; gap: 8px; 
+    }
+    .nav-links a { margin-right: 0; font-size: 13px; }
+    #lang-switch { font-size: 12px; padding: 3px 5px; }
 
-function switchMode(mode) {
-    document.getElementById('upload-ui').style.display = mode === 'live' ? 'none' : 'block';
-    document.getElementById('live-ui').style.display = mode === 'live' ? 'block' : 'none';
+    /* 调整主容器距离顶部的空间，防止被变高的导航栏遮挡 */
+    #main-container { padding-top: 100px; }
+    .content-section { top: 100px; height: calc(100vh - 100px); }
+
+    /* --- 全局排版与文字 --- */
+    .main-title { font-size: 32px; margin-bottom: 15px; }
+    .section-title { font-size: 28px; margin-bottom: 20px; }
+    .text-box { padding: 15px; font-size: 14px; line-height: 1.6; }
+
+    /* --- 第 1 页: 主页 (History) --- */
+    .food-list { grid-template-columns: 1fr; gap: 15px; } /* 食物卡片单列 */
+    .food-item img { height: 250px; }
+    .video-carousel { width: 100%; margin: 0 auto; }
+    .video-nav { width: 36px; height: 36px; font-size: 18px; }
+    .video-nav.prev { left: 5px; }
+    .video-nav.next { right: 5px; }
+
+    /* --- 第 2 页: 制作工序 (Process) --- */
+    .process-wrapper { width: 95%; }
+    .process-step { flex-direction: column; text-align: center; } /* 强制上下结构 */
+    .process-media { max-width: 100%; width: 100%; }
+    .process-text p { text-align: left; }
     
-    document.getElementById('btn-upload-mode').classList.toggle('active', mode === 'upload');
-    document.getElementById('btn-live-mode').classList.toggle('active', mode === 'live');
-
-    if (mode === 'live') startWebcam(); else stopWebcam();
-}
-
-async function startWebcam() {
-    const video = document.getElementById('webcam');
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment", width: 1280, height: 720 } 
-        });
-        video.srcObject = stream;
-        document.getElementById('live-results').innerHTML = "📡 AI 视觉引擎已连接...";
-        
-        // 每 600ms 捕获一帧并请求 AI
-        liveInterval = setInterval(captureAndTrack, 600);
-    } catch (err) {
-        alert("摄像头开启失败: " + err.message);
+    /* 底部两块平分的卡片改为上下排列 */
+    .process-bottom-row { 
+        flex-direction: column; 
+        gap: 20px; 
+        margin: 20px 0;
     }
+    .process-bottom-row .process-ready,
+    .process-bottom-row .process-video {
+        padding: 15px;
+    }
+
+    /* --- 第 3 页: AI 智能探测 (AI) --- */
+    .ai-wrapper { width: 100%; padding: 0 10px; box-sizing: border-box; }
+    .upload-box { height: 250px; }
+    #analyze-btn { padding: 12px; font-size: 14px; }
+
+    /* --- 第 4 页: 地理位置 (Map) --- */
+    .map-wrapper { height: auto; display: flex; flex-direction: column; }
+    .map-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        /* 调整滤镜：保留深色风格，但增强对比度让标记明显 */
+        filter: grayscale(1) invert(0.9) contrast(1.1) brightness(0.9);
+    }
+    
+    /* 原本悬浮在右上角的介绍框，改为普通的文字块 */
+    .map-info {
+        position: relative; 
+        top: 0; right: 0; 
+        width: 100%; max-width: 100%;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        order: 1; /* 信息放在地图上方 */
+    }
+    .mukah-section { flex-direction: column; padding: 20px 15px; }
 }
 
-function stopWebcam() {
-    if (liveInterval) clearInterval(liveInterval);
-    if (stream) stream.getTracks().forEach(t => t.stop());
-}
-
-async function captureAndTrack() {
-    const video = document.getElementById('webcam');
-    const canvas = document.createElement('canvas');
-    if (!video.videoWidth) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-
-    canvas.toBlob(async (blob) => {
-        const formData = new FormData();
-        formData.append('file', blob, 'frame.jpg');
-        formData.append('track', 'true'); // 关键：告知后端启用追踪 ID
-
-        try {
-            const response = await fetch(API_URL, { method: 'POST', body: formData });
-            const data = await response.json();
-            
-            // 实时绘图
-            const overlay = document.getElementById('canvas-overlay');
-            drawDetections(video, overlay, data);
-
-            // 更新状态文字
-            const prob = (data.bayesian_inference.quality_probability * 100).toFixed(1);
-            document.getElementById('live-results').innerHTML = `
-                <b>${data.action_recognized}</b> <br> 
-                质量估算: ${prob}%
-            `;
-        } catch (e) { console.error("Real-time API error"); }
-    }, 'image/jpeg', 0.5);
+/* ------------------------------------------
+   📱 3. 极窄手机屏幕 (max-width: 480px)
+   ------------------------------------------ */
+@media (max-width: 480px) {
+    .main-title { font-size: 26px; }
+    .nav-links a { font-size: 12px; }
+    /* 导航栏换行后高度进一步增加 */
+    #main-container { padding-top: 110px; }
+    .content-section { top: 110px; height: calc(100vh - 110px); }
+    .text-box { font-size: 13px; }
 }
