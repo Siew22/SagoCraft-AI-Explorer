@@ -74,7 +74,8 @@ const translations = {
         res_process: "推断工序",
         res_quality: "质量预测分数",
         res_insight: "AI 专家建议",
-        res_items: "检测到物体"
+        res_items: "检测到物体",
+        idle: "空闲 / 观察中"
     },
     en: {
         nav_history: "Home", nav_process: "Process", nav_ai: "AI Detection", nav_map: "Location",
@@ -125,7 +126,8 @@ const translations = {
         res_process: "Inferred Process",
         res_quality: "Quality Prediction",
         res_insight: "AI Expert Insight",
-        res_items: "Detected Objects"
+        res_items: "Detected Objects",
+        idle: "Idle / Observing"
     },
     ms: {
         nav_history: "Laman Utama", nav_process: "Proses", nav_ai: "Pengesanan AI", nav_map: "Lokasi",
@@ -176,19 +178,24 @@ const translations = {
         res_process: "Proses Dikesan",
         res_quality: "Ramalan Kualiti",
         res_insight: "Wawasan Pakar AI",
-        res_items: "Objek Dikesan"
+        res_items: "Objek Dikesan",
+        idle: "Menunggu / Memerhati"
     }
 };
 
 // 2.5 修改渲染结果的逻辑，让它读取字典
 function renderResultBox(container, data) {
-    const lang = translations[currentLanguage]; // 获取当前语言包
+    const lang = translations[currentLanguage]; // 关键：获取当前选中的语言包
     const prob = (data.bayesian_inference?.quality_probability * 100).toFixed(1);
     const objects = data.vision_details?.detected_objects.map(o => o.object_name).join(', ') || 'None';
+    
+    // 如果是 Idle 状态，也翻译一下
+    let displayAction = data.action_recognized;
+    if (displayAction === "Idle / Observing") displayAction = lang.idle;
 
     container.innerHTML = `
         <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${data.action_recognized || 'Unknown'}</h3>
+            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${displayAction}</h3>
             <p style="margin:10px 0 5px 0;"><b>${lang.res_quality}:</b> <span style="color:#00FF00">${prob}%</span></p>
             <p style="margin:5px 0;"><b>${lang.res_items}:</b> ${objects}</p>
             <p style="font-size:13px; color:#aaa; font-style:italic; margin-top:10px;"><b>${lang.res_insight}:</b> ${data.bayesian_inference?.insight || ''}</p>
@@ -320,6 +327,69 @@ function updateHistoryVideoMeta() {
     historyVideoRefLabel.textContent = translations[currentLanguage]?.video_reference_label || "Reference:";
     historyVideoRef.textContent = item.reference;
     historyVideoRef.href = item.reference;
+}
+
+// ==========================================
+// 核心绘图函数：在实时追踪时更新 Canvas 覆盖层和文字
+// ==========================================
+function updateLiveOverlay(data) {
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas-overlay');
+    const statusBox = document.getElementById('live-results');
+    if (!video || !canvas || !statusBox) return;
+
+    const ctx = canvas.getContext('2d');
+    
+    // 1. 同步画布尺寸
+    canvas.width = video.clientWidth;
+    canvas.height = video.clientHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 2. 获取当前语言包 (关键修复！)
+    const lang = translations[currentLanguage];
+
+    // 3. 计算坐标缩放比例
+    const scaleX = canvas.width / video.videoWidth;
+    const scaleY = canvas.height / video.videoHeight;
+
+    if (data.vision_details && data.vision_details.detected_objects) {
+        data.vision_details.detected_objects.forEach(obj => {
+            const [x1, y1, x2, y2] = obj.bounding_box;
+            
+            // 绘制绿色矩形框
+            ctx.strokeStyle = "#00FF00";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x1 * scaleX, y1 * scaleY, (x2 - x1) * scaleX, (y2 - y1) * scaleY);
+
+            // 绘制标签 (ID + 名字)
+            ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
+            const idText = obj.object_id ? ` ID:${obj.object_id}` : "";
+            const label = `${obj.object_name}${idText}`;
+            
+            ctx.font = "bold 14px Inter, Arial";
+            const labelWidth = ctx.measureText(label).width;
+            ctx.fillRect(x1 * scaleX, (y1 * scaleY) - 25, labelWidth + 10, 25);
+
+            ctx.fillStyle = "black";
+            ctx.fillText(label, (x1 * scaleX) + 5, (y1 * scaleY) - 7);
+        });
+
+        // 4. 更新下方的实时文字信息 (关键修复：使用 lang 字典)
+        const prob = (data.bayesian_inference.quality_probability * 100).toFixed(1);
+        
+        // 如果是 Idle 状态，显示翻译后的 "空闲/观察中"
+        let displayAction = data.action_recognized;
+        if (displayAction === "Idle / Observing") {
+            displayAction = lang.idle;
+        }
+
+        statusBox.innerHTML = `
+            <div style="line-height: 1.4;">
+                <b style="color:var(--accent); font-size: 1.1rem;">${lang.res_process}: ${displayAction}</b><br>
+                <span>${lang.res_quality}: <span style="color:#00FF00">${prob}%</span></span>
+            </div>
+        `;
+    }
 }
 
 // ==========================================
