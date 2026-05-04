@@ -478,74 +478,57 @@ let uploadTrackingInterval = null; // 用于记录视频定时器
 async function runUploadAnalysis() {
     const fileInput = document.getElementById('file-upload');
     const resultDiv = document.getElementById('upload-results');
-    if (!fileInput.files[0]) return alert("请先上传照片或视频文件！");
+    if (!fileInput.files[0]) return alert("Please upload a file first!");
 
     const file = fileInput.files[0];
-    
-    // 【分支 A：如果用户上传的是 视频】
+    const lang = translations[currentLanguage]; // 关键：获取当前语言包
+
     if (file.type.startsWith('video')) {
         const videoElement = document.getElementById('upload-video');
         const canvasOverlay = document.getElementById('upload-canvas');
-
-        resultDiv.innerHTML = '<p style="color:var(--accent);">🎥 AI 正在对视频进行逐帧追踪分析...</p>';
-
-        // 1. 让视频自动开始播放
+        resultDiv.innerHTML = `<p style="color:var(--accent);">🎥 ${lang.nav_ai}...</p>`;
         videoElement.play();
 
-        // 2. 清理旧的定时器，防止重叠
         if (uploadTrackingInterval) clearInterval(uploadTrackingInterval);
 
-        // 3. 开启循环：视频一边播，AI 一边检测一边画框
         uploadTrackingInterval = setInterval(async () => {
-            // 如果用户按了暂停，或者视频播完了，就停止检测
             if (videoElement.paused || videoElement.ended) {
                 clearInterval(uploadTrackingInterval);
-                if (videoElement.ended) {
-                    resultDiv.innerHTML += '<p style="color:#00FF00; font-weight:bold;">✅ 视频分析完毕！</p>';
-                }
                 return;
             }
 
-            // 偷偷在后台用一张虚拟画布截取当前视频的这一瞬间
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = videoElement.videoWidth;
             tempCanvas.height = videoElement.videoHeight;
             tempCanvas.getContext('2d').drawImage(videoElement, 0, 0);
 
-            // 把这一瞬间变成图片，发给你家里的 3060 显卡
             tempCanvas.toBlob(async (blob) => {
                 const trackFormData = new FormData();
                 trackFormData.append('file', blob, 'frame.jpg');
-                trackFormData.append('track', 'true'); // 告诉后端开启追踪 ID 模式
+                trackFormData.append('track', 'true');
 
                 try {
                     const response = await fetch(API_URL, { method: 'POST', body: trackFormData });
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // 神奇的魔法：把后端返回的框框，画在正在播放的视频上面！
-                        drawDetections(videoElement, canvasOverlay, data);
-                        
-                        // 动态更新旁边的文字分析结果
-                        const prob = data.bayesian_inference?.quality_probability ? (data.bayesian_inference.quality_probability * 100).toFixed(1) : "0.0";
-                        resultDiv.innerHTML = `
-                            <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-                                <h3 style="margin:0; color:var(--accent)">实时推断工序: ${data.action_recognized || 'Unknown'}</h3>
-                                <p><b>当前质量分数:</b> <span style="color:#00FF00">${prob}%</span></p>
-                                <p style="font-size:13px; color:#aaa;"><em>${data.bayesian_inference?.insight || ''}</em></p>
-                            </div>
-                        `;
-                    }
-                } catch (err) {
-                    console.error("视频帧分析网络延迟", err);
-                }
-            }, 'image/jpeg', 0.5); // 用 0.5 的压缩率，保证 ngrok 传输极快！
-        }, 600); // 每 0.6 秒画一次框，完美平衡效果与显卡压力
+                    const data = await response.json();
+                    drawDetections(videoElement, canvasOverlay, data);
+                    
+                    // --- 动态翻译逻辑 ---
+                    let displayAction = data.action_recognized || 'Unknown';
+                    if (displayAction === "Idle / Observing") displayAction = lang.idle;
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
+                            <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${displayAction}</h3>
+                            <p><b>${lang.res_quality}:</b> <span style="color:#00FF00">${(data.bayesian_inference?.quality_probability * 100).toFixed(1)}%</span></p>
+                        </div>
+                    `;
+                } catch (err) { console.error(err); }
+            }, 'image/jpeg', 0.5);
+        }, 600);
 
-    } 
-    // 【分支 B：如果用户上传的是 照片 (保持之前的逻辑)】
-    else {
-        resultDiv.innerHTML = '<p style="color:var(--accent);">⌛ AI 视觉引擎正在深度分析中...</p>';
+    } else {
+        // 照片处理逻辑
+        resultDiv.innerHTML = `<p style="color:var(--accent);">⌛ ${lang.nav_ai}...</p>`;
         const formData = new FormData();
         formData.append('file', file);
 
@@ -553,23 +536,22 @@ async function runUploadAnalysis() {
             const response = await fetch(API_URL, { method: 'POST', body: formData });
             const data = await response.json();
             
-            if (data.status === "error") throw new Error(data.message || "后端无法解析该画面");
+            const img = document.getElementById('upload-img');
+            const canvas = document.getElementById('upload-canvas');
+            if(img && canvas) drawDetections(img, canvas, data);
 
-            const mediaEl = document.getElementById('upload-img');
-            const canvasOverlay = document.getElementById('upload-canvas');
-            if(mediaEl && canvasOverlay) drawDetections(mediaEl, canvasOverlay, data);
+            let displayAction = data.action_recognized || 'Unknown';
+            if (displayAction === "Idle / Observing") displayAction = lang.idle;
 
-            const prob = data.bayesian_inference?.quality_probability ? (data.bayesian_inference.quality_probability * 100).toFixed(1) : "0.0";
             resultDiv.innerHTML = `
                 <div style="background:rgba(196,164,124,0.15); padding:20px; border-radius:8px; border-left:4px solid var(--accent);">
-                    <h3 style="margin:0; color:var(--accent)">推断工序: ${data.action_recognized || 'Unknown'}</h3>
-                    <p><b>质量预测分数:</b> <span style="color:#00FF00">${prob}%</span></p>
-                    <p><b>AI 专家建议:</b> ${data.bayesian_inference?.insight || '无'}</p>
+                    <h3 style="margin:0; color:var(--accent)">${lang.res_process}: ${displayAction}</h3>
+                    <p><b>${lang.res_quality}:</b> <span style="color:#00FF00">${(data.bayesian_inference?.quality_probability * 100).toFixed(1)}%</span></p>
+                    <p><b>${lang.res_items}:</b> ${data.vision_details?.detected_objects.map(o => o.object_name).join(', ') || 'None'}</p>
+                    <p style="font-size:13px; color:#aaa;"><b>${lang.res_insight}:</b> ${data.bayesian_inference?.insight || ''}</p>
                 </div>
             `;
-        } catch (err) {
-            resultDiv.innerHTML = `<p style="color:red">❌ 分析失败: ${err.message}</p>`;
-        }
+        } catch (err) { resultDiv.innerHTML = `<p style="color:red">Error: ${err.message}</p>`; }
     }
 }
 
@@ -611,30 +593,33 @@ function stopWebcam() {
 async function captureAndTrack() {
     const video = document.getElementById('webcam');
     const canvas = document.createElement('canvas');
-    if (!video.videoWidth) return;
+    if (!video || !video.videoWidth) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
 
+    const lang = translations[currentLanguage]; // 关键：获取当前语言
+
     canvas.toBlob(async (blob) => {
         const formData = new FormData();
         formData.append('file', blob, 'frame.jpg');
-        formData.append('track', 'true'); // 关键：告知后端启用追踪 ID
+        formData.append('track', 'true');
 
         try {
             const response = await fetch(API_URL, { method: 'POST', body: formData });
             const data = await response.json();
             
-            // 实时绘图
             const overlay = document.getElementById('canvas-overlay');
             drawDetections(video, overlay, data);
 
-            // 更新状态文字
-            const prob = (data.bayesian_inference.quality_probability * 100).toFixed(1);
+            // --- 实时文本翻译 ---
+            let displayAction = data.action_recognized || 'Unknown';
+            if (displayAction === "Idle / Observing") displayAction = lang.idle;
+
             document.getElementById('live-results').innerHTML = `
-                <b>${data.action_recognized}</b> <br> 
-                质量估算: ${prob}%
+                <b>${lang.res_process}: ${displayAction}</b> <br> 
+                ${lang.res_quality}: ${(data.bayesian_inference.quality_probability * 100).toFixed(1)}%
             `;
         } catch (e) { console.error("Real-time API error"); }
     }, 'image/jpeg', 0.5);

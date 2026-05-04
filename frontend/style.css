@@ -235,15 +235,60 @@ body, html {
 .ai-header h1 { font-family: 'Cinzel', serif; font-size: 40px; margin-bottom: 10px;}
 .ai-header span { color: var(--accent); }
 .ai-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;}
+/* 1. 修改上传盒子，去掉固定高度，让它根据内容自动撑开 */
 .upload-box {
-    border: 2px dashed rgba(196, 164, 124, 0.5); height: 400px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.4); cursor: pointer; transition: 0.3s; text-align: center;
+    border: 2px dashed rgba(196, 164, 124, 0.5);
+    min-height: 250px; /* 设置最小高度而非固定高度 */
+    height: auto !important; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: 0.3s;
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px; /* 与下方按钮留出间距 */
+    overflow: hidden;
 }
 .upload-box:hover { border-color: var(--accent); background: rgba(196, 164, 124, 0.1); }
-#preview-container img, #preview-container video { max-width: 100%; max-height: 380px; object-fit: contain;}
+/* 2. 核心：预览容器 */
+#preview-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 15px;
+}
 
-.action-panel { display: flex; flex-direction: column; gap: 20px; }
+/* 3. 强制图片自适应宽度，不超出屏幕 */
+#preview-container img, 
+#preview-container video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    display: block; /* 消除底部间隙 */
+}
+
+/* 4. 画布覆盖层：必须绝对定位且大小由 JS 动态控制 */
+#upload-canvas, #result-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none; /* 确保不挡住点击事件 */
+    z-index: 10;
+}
+
+/* 5. 调整下方文字卡片的间距，防止重叠 */
+.action-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
 .instruction-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px;}
 .instruction-box h3 { color: var(--accent); margin-top: 0;}
 .instruction-box ul { padding-left: 20px; line-height: 1.8; color: #ccc;}
@@ -337,7 +382,23 @@ body, html {
 /* ------------------------------------------
    📱 2. 手机端标准适配 (max-width: 768px)
    ------------------------------------------ */
+/* 6. 在手机端（max-width: 768px）让布局更宽敞 */
 @media (max-width: 768px) {
+    .ai-upload-grid {
+        display: flex;
+        flex-direction: column; /* 手机端强制上下排列 */
+        gap: 15px;
+    }
+    
+    .main-title {
+        font-size: 28px; /* 标题稍微缩小一点 */
+    }
+
+    /* 识别结果卡片加宽 */
+    #upload-results, #result-display {
+        width: 100%;
+        margin-top: 10px;
+    }
     /* --- 全局导航栏 --- */
     .navbar {
         height: auto; 
