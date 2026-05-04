@@ -426,37 +426,3 @@ body, html {
     .content-section { top: 110px; height: calc(100vh - 110px); }
     .text-box { font-size: 13px; }
 }
-/* --- 视频背景核心样式 --- */
-.video-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -2;
-    overflow: hidden;
-    background-color: #000; /* 视频加载前的黑底 */
-}
-
-#bg-video {
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
-    filter: brightness(0.4) saturate(0.8); /* 调暗视频，突出金色文字 */
-}
-
-/* 隐藏原本的静态 hero-bg，因为现在用视频了 */
-#history .hero-bg {
-    display: none;
-}
-
-/* 稍微减轻地图的滤镜，确保红色图钉能隐约看出来 */
-.map-wrapper iframe {
-    filter: grayscale(0.5) invert(0.9) contrast(1.2) brightness(0.8);
-}
