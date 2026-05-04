@@ -1,0 +1,8 @@
+venv/
+venv_sago/
+env/
+__pycache__/
+*.pyc
+*.pt
+runs/
+../frontend/

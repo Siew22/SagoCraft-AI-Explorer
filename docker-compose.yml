@@ -1,0 +1,53 @@
+﻿version: '3.8'
+
+services:
+  # 1. 数据库
+  db:
+    image: mysql:8.0
+    container_name: sago_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: sago_password
+      MYSQL_DATABASE: sago_db
+    ports:
+      - "3307:3306"
+    volumes:
+      # 回归 C 盘自动管理模式，不再指向 D 盘
+      - sago_db_data:/var/lib/mysql
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./frontend:/frontend:ro 
+
+  # 2. AI 后端
+  backend:
+    build: ./backend
+    container_name: sago_ai_server
+    restart: always
+    environment:
+      - DOCKER_ENV=1  # 显式告诉 Python：你在 Docker 里！
+      - DATABASE_URL=mysql+pymysql://root:sago_password@db:3306/sago_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    # 显卡支持 (如果安装了 NVIDIA Container Toolkit)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # 3. ngrok
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: sago_ngrok
+    restart: always
+    environment:
+      NGROK_AUTHTOKEN: "2w4uQUFWisFpNRn7nXIuo9oJ6ks_66QJeh3V3DviwHjeSVzZ5"
+    command: http backend:8000 --url juliette-unattempted-tammara.ngrok-free.dev
+    depends_on:
+      - backend
+
+volumes:
+  sago_db_data: # 重新启用这个 C 盘卷

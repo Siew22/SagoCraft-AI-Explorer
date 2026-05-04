@@ -1,0 +1,35 @@
+# --- Web 框架与服务器 ---
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# --- 深度学习与张量计算 (AI模型核心) ---
+# 注意: Numpy 限制在 2.0 以下，因为最近 Numpy 2.0 大更新可能导致某些库不兼容
+numpy==1.26.4
+torch==2.1.2
+torchvision==0.16.2
+
+# --- 计算机视觉 (视频流处理) ---
+# 必须使用 headless 版本以适应 Docker 纯命令行的环境
+opencv-python-headless==4.8.1.78
+
+# --- 贝叶斯网络 (概率推理) ---
+pgmpy==0.1.24
+networkx==3.2.1
+scipy==1.11.4
+statsmodels==0.14.1
+
+# --- 数据库交互 ---
+SQLAlchemy==2.0.23
+PyMySQL==1.1.0
+cryptography==41.0.7  # PyMySQL 在某些高级加密认证时可能需要
+
+# --- AI 感知流水线新增依赖 ---
+ultralytics==8.4.45   # YOLOv8 模型库
+transformers==4.35.2   # HuggingFace 的模型库 (用于 BLIP)
+Pillow==10.1.0         # 图像处理库
+accelerate==0.24.1     # 加速 transformers 模型
+tensorflow==2.15.0
+keras==2.15.0
+tf-keras==2.15.0
+deepface==0.0.99

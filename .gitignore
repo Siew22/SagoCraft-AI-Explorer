@@ -1,0 +1,34 @@
+# D:\Sago_CNNs\.gitignore
+
+# 1. 忽略所有 Python 虚拟环境
+venv/
+venv_sago/
+env/
+
+# 2. 忽略 Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+
+# 3. 忽略 IDE 和编辑器配置文件
+.vscode/
+.idea/
+
+# 4. 忽略本地开发产生的大文件和日志
+runs/
+*.log
+*.pt
+*.zip
+
+# 5. 忽略超大的数据集文件 (绝对不能上传)
+dataset/
+raw_data/
+Sago_Final_Dataset*/
+
+# 6. 忽略 Docker 产生的数据卷 (数据库数据)
+Sago_Database/
+Sago_Project_Data/
+mysql_data/
+
+# 7. 忽略敏感的环境变量文件
+.env
