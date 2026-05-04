@@ -395,7 +395,13 @@ body, html {
 
     /* --- 第 4 页: 地理位置 (Map) --- */
     .map-wrapper { height: auto; display: flex; flex-direction: column; }
-    .map-wrapper iframe { height: 350px; order: 2; } /* 地图放在下方 */
+    .map-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        /* 调整滤镜：保留深色风格，但增强对比度让标记明显 */
+        filter: grayscale(1) invert(0.9) contrast(1.1) brightness(0.9);
+    }
     
     /* 原本悬浮在右上角的介绍框，改为普通的文字块 */
     .map-info {
